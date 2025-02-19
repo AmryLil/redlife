@@ -2,11 +2,11 @@
 
 namespace App\View\Components;
 
-use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
+use Closure;
 
-class card-product extends Component
+class CardProduct extends Component
 {
     /**
      * Create a new component instance.
