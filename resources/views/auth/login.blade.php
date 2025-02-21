@@ -1,48 +1,67 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+<!DOCTYPE html>
+<html lang="id">
 
-        <x-validation-errors class="mb-4" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
 
-        @session('status')
-            <div class="mb-4 font-medium text-sm text-green-600">
-                {{ $value }}
+<body class="bg-gradient-to-r from-red-600 via-red-500 to-orange-500 flex items-center justify-center h-screen">
+    <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105">
+        <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">Welcome Back</h2>
+
+        @if ($errors->any())
+            <div class="mb-4 bg-red-100 text-red-700 p-3 rounded-md shadow-md">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>⚠ {{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
-        @endsession
+        @endif
 
-        <form method="POST" action="{{ route('login') }}">
+        @if (session('status'))
+            <div class="mb-4 bg-green-100 text-green-700 p-3 rounded-md shadow-md">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('login') }}" class="space-y-4">
             @csrf
 
             <div>
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+                <label class="block font-medium text-gray-700" for="email">Email</label>
+                <input type="email" id="email" name="email"
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
+                    value="{{ old('email') }}" required autofocus>
             </div>
 
-            <div class="mt-4">
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" />
+            <div>
+                <label class="block font-medium text-gray-700" for="password">Password</label>
+                <input type="password" id="password" name="password"
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
+                    required>
             </div>
 
-            <div class="block mt-4">
-                <label for="remember_me" class="flex items-center">
-                    <x-checkbox id="remember_me" name="remember" />
-                    <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+            <div class="flex items-center justify-between">
+                <label class="flex items-center">
+                    <input type="checkbox" name="remember" class="mr-2">
+                    <span class="text-sm text-gray-600">Remember Me</span>
                 </label>
-            </div>
-
-            <div class="flex items-center justify-end mt-4">
                 @if (Route::has('password.request'))
-                    <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                        {{ __('Forgot your password?') }}
-                    </a>
+                    <a href="{{ route('password.request') }}" class="text-sm text-red-500 hover:underline">Forgot
+                        Password?</a>
                 @endif
-
-                <x-button class="ms-4">
-                    {{ __('Log in') }}
-                </x-button>
             </div>
+
+            <button type="submit"
+                class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition duration-200 shadow-md">
+                Log in
+            </button>
         </form>
-    </x-authentication-card>
-</x-guest-layout>
+    </div>
+</body>
+
+</html>
