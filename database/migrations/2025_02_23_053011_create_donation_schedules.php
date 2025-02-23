@@ -8,10 +8,10 @@ return new class extends Migration {
     {
         Schema::create('donation_schedules', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('hospital_id')->constrained()->onDelete('cascade'); // Relasi ke rumah sakit/bank darah
-            $table->foreignId('donation_location_id')->constrained()->onDelete('cascade'); // Relasi ke lokasi donor
-            $table->date('date'); // Tanggal donor
-            $table->time('time'); // Jam donor
+            $table->foreignId('hospital_id')->constrained()->onDelete('cascade');
+            $table->foreignId('donation_location_id')->constrained()->onDelete('cascade');
+            $table->date('date');
+            $table->time('time');
             $table->timestamps();
         });
     }

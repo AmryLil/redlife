@@ -26,6 +26,7 @@ return [
         //     'forceTLS' => true,
         // ],
     ],
+    'title'        => 'BloodLink',  // Ganti dengan nama aplikasimu
 
     /*
      * |--------------------------------------------------------------------------
