@@ -5,8 +5,14 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\HospitalsResource\Pages;
 use App\Filament\Resources\HospitalsResource\RelationManagers;
 use App\Models\Hospitals;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Forms;
 use Filament\Tables;
@@ -23,7 +29,27 @@ class HospitalsResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Grid::make(1)
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Hospital Name')
+                            ->required(),
+                        TextInput::make('address')
+                            ->label('Address')
+                            ->required(),
+                        TextInput::make('url_address')
+                            ->label('URL Address')
+                            ->required(),
+                        TextInput::make('contact')
+                            ->label('Contact')
+                            ->required(),
+                        FileUpload::make('cover')
+                            ->label('Cover')
+                            ->image()
+                            ->directory('covers')
+                            ->required()
+                            ->imageEditor()
+                    ]),
             ]);
     }
 
@@ -31,7 +57,15 @@ class HospitalsResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('name')
+                    ->label('Hospital Name'),
+                TextColumn::make('address')
+                    ->wrap(),
+                TextColumn::make('contact'),
+                ImageColumn::make('cover')
+                    ->disk('public')
+                    ->url(fn($record) => asset('storage/' . $record->cover))
+                    ->label('Cover')
             ])
             ->filters([
                 //

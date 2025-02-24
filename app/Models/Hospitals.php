@@ -9,5 +9,5 @@ class Hospitals extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'address', 'contact'];
+    protected $fillable = ['name', 'address', 'url_address', 'contact', 'cover'];
 }

@@ -6,8 +6,11 @@ use App\Filament\Resources\BloodGroupsResource\Pages;
 use App\Filament\Resources\BloodGroupsResource\RelationManagers;
 use App\Models\BloodGroups;
 use App\Models\BloodTypes;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Forms;
 use Filament\Tables;
@@ -24,7 +27,15 @@ class BloodGroupsResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Grid::make(1)
+                    ->schema([
+                        TextInput::make('group')
+                            ->label('Blood Group')
+                            ->required(),
+                        TextInput::make('rhesus')
+                            ->label('Rhesus')
+                            ->required(),
+                    ]),
             ]);
     }
 
@@ -32,7 +43,8 @@ class BloodGroupsResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('group'),
+                TextColumn::make('rhesus'),
             ])
             ->filters([
                 //

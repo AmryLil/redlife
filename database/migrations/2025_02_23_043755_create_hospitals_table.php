@@ -10,7 +10,9 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('address');
+            $table->string('url_address');
             $table->string('contact');
+            $table->string('cover');
             $table->timestamps();
         });
     }
