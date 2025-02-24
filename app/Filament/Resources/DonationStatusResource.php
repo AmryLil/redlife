@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\DonationStatusResource\Pages;
 use App\Filament\Resources\DonationStatusResource\RelationManagers;
 use App\Models\DonationStatus;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
@@ -23,7 +24,12 @@ class DonationStatusResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Grid::make(1)
+                    ->schema([
+                        Forms\Components\TextInput::make('status')
+                            ->required()
+                            ->maxLength(255),
+                    ]),
             ]);
     }
 
@@ -31,7 +37,16 @@ class DonationStatusResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('status')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
