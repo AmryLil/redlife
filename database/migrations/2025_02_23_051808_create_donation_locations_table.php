@@ -10,6 +10,7 @@ return new class extends Migration {
         Schema::create('donation_locations', function (Blueprint $table) {
             $table->id();
             $table->string('location_name');
+            $table->string('location_detail');
             $table->text('address');
             $table->string('url_address');
             $table->string('cover');

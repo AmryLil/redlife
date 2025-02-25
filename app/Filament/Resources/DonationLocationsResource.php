@@ -37,6 +37,9 @@ class DonationLocationsResource extends Resource
                         TextInput::make('address')
                             ->label('Address')
                             ->required(),
+                        TextInput::make('location_detail')
+                            ->label('Location Detail')
+                            ->required(),
                         TextInput::make('url_address')
                             ->label('URL Address')
                             ->required(),
@@ -58,14 +61,14 @@ class DonationLocationsResource extends Resource
                     ->label('Location Name'),
                 TextColumn::make('address')
                     ->wrap(),
+                TextColumn::make('location_detail')
+                    ->label('Location Detail'),
                 ImageColumn::make('cover')
                     ->disk('public')
                     ->url(fn($record) => asset('storage/' . $record->cover))
                     ->label('Cover')
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
