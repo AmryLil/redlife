@@ -4,8 +4,10 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\RequestTypesResource\Pages;
 use App\Filament\Resources\RequestTypesResource\RelationManagers;
+use App\Models\BloodRequest;
 use App\Models\BloodRequestType;
 use App\Models\RequestTypes;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
@@ -24,7 +26,12 @@ class RequestTypesResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Grid::make(1)
+                    ->schema([
+                        Forms\Components\TextInput::make('type')
+                            ->required()
+                            ->maxLength(255),
+                    ]),
             ]);
     }
 
@@ -32,7 +39,16 @@ class RequestTypesResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('type')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //

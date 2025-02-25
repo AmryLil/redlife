@@ -9,7 +9,7 @@ class DonationLocation extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['location_name', 'address'];
+    protected $fillable = ['location_name', 'address', 'url_address', 'cover'];
 
     public function donations()
     {

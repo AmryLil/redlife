@@ -6,8 +6,13 @@ use App\Filament\Resources\DonationLocationsResource\Pages;
 use App\Filament\Resources\DonationLocationsResource\RelationManagers;
 use App\Models\DonationLocation;
 use App\Models\DonationLocations;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Forms;
 use Filament\Tables;
@@ -24,7 +29,24 @@ class DonationLocationsResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Grid::make(1)
+                    ->schema([
+                        TextInput::make('location_name')
+                            ->label('Location Name')
+                            ->required(),
+                        TextInput::make('address')
+                            ->label('Address')
+                            ->required(),
+                        TextInput::make('url_address')
+                            ->label('URL Address')
+                            ->required(),
+                        FileUpload::make('cover')
+                            ->label('Cover')
+                            ->image()
+                            ->directory('covers')
+                            ->required()
+                            ->imageEditor()
+                    ]),
             ]);
     }
 
@@ -32,7 +54,14 @@ class DonationLocationsResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('location_name')
+                    ->label('Location Name'),
+                TextColumn::make('address')
+                    ->wrap(),
+                ImageColumn::make('cover')
+                    ->disk('public')
+                    ->url(fn($record) => asset('storage/' . $record->cover))
+                    ->label('Cover')
             ])
             ->filters([
                 //
