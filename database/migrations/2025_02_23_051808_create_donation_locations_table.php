@@ -14,6 +14,8 @@ return new class extends Migration {
             $table->text('address');
             $table->string('url_address');
             $table->string('cover');
+            $table->string('email');
+            $table->string('phone_number');
             $table->timestamps();
         });
     }

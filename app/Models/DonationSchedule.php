@@ -9,12 +9,12 @@ class DonationSchedule extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['hospital_id', 'donation_location_id', 'date', 'time'];
-
-    public function hospital()
-    {
-        return $this->belongsTo(Hospitals::class);
-    }
+    protected $fillable = [
+        'donation_location_id',
+        'date',
+        'start_time',
+        'end_time',
+    ];
 
     public function location()
     {
