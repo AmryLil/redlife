@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateDonationSchedulesTable extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      *
@@ -14,7 +13,7 @@ class CreateDonationSchedulesTable extends Migration
     public function up()
     {
         Schema::create('donation_schedules', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->unsignedBigInteger('donation_location_id');
             $table->date('date');
             $table->time('start_time')->nullable();
@@ -34,4 +33,4 @@ class CreateDonationSchedulesTable extends Migration
     {
         Schema::dropIfExists('donation_schedules');
     }
-}
+};

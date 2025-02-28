@@ -9,7 +9,7 @@ class Donor extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'donation_date', 'location', 'status'];
+    protected $fillable = ['user_id', 'donation_date', 'location_id', 'status'];
 
     public function user()
     {

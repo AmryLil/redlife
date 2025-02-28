@@ -8,7 +8,7 @@ return new class extends Migration {
     public function up()
     {
         Schema::create('blood_stocks', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->foreignId('blood_type_id')->constrained('blood_types')->onDelete('cascade');
             $table->foreignId('hospital_id')->constrained('hospitals')->onDelete('cascade');
             $table->integer('quantity')->default(0);

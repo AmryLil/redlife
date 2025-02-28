@@ -15,6 +15,7 @@ use Filament\PanelProvider;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
@@ -25,11 +26,18 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         Filament::registerRenderHook('content.start', fn() => view('filament.pages.dashboard'));
+
+        Filament::serving(function () {
+            Model::retrieved(function ($model) {
+                if ($model->getKeyType() === 'string' && !is_string($model->getKey())) {
+                    $model->setAttribute($model->getKeyName(), (string) $model->getKey());
+                }
+            });
+        });
         return $panel
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
             ->sidebarCollapsibleOnDesktop()
             ->colors([
                 'primary' => Color::Red,
