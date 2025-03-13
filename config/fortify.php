@@ -66,7 +66,7 @@ return [
      * | and the user is authenticated. You are free to change this value.
      * |
      */
-    'home' => '/admin',
+    'home' => '/dashboard',
 
     /*
      * |--------------------------------------------------------------------------
@@ -78,7 +78,7 @@ return [
      * | subdomain under which all of the Fortify routes will be available.
      * |
      */
-    'prefix' => '',
+    'prefix' => '/dashboard',
     'domain' => null,
 
     /*
