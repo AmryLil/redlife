@@ -1,11 +1,13 @@
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="csrf-token" content="{{ csrf_token() }}">
-
-<title>{{ $title ?? 'Page Title' }}</title>
-<!-- Fonts -->
-<link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-<div class="text-white m-0 p-0">
+<style>
+    .fi-header {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+</style>
+<div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+        <path fill="#ff5500" fill-opacity="1"
+            d="M0,256L24,234.7C48,213,96,171,144,176C192,181,240,235,288,261.3C336,288,384,288,432,282.7C480,277,528,267,576,250.7C624,235,672,213,720,208C768,203,816,213,864,218.7C912,224,960,224,1008,197.3C1056,171,1104,117,1152,128C1200,139,1248,213,1296,213.3C1344,213,1392,139,1416,101.3L1440,64L1440,0L1416,0C1392,0,1344,0,1296,0C1248,0,1200,0,1152,0C1104,0,1056,0,1008,0C960,0,912,0,864,0C816,0,768,0,720,0C672,0,624,0,576,0C528,0,480,0,432,0C384,0,336,0,288,0C240,0,192,0,144,0C96,0,48,0,24,0L0,0Z">
+        </path>
+    </svg>
 </div>

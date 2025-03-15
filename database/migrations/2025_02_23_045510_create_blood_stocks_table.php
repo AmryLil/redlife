@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('blood_stocks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('blood_type_id')->constrained('blood_types')->onDelete('cascade');
-            $table->foreignId('hospital_id')->constrained('hospitals')->onDelete('cascade');
+            $table->foreignId('storage_location_id')->constrained('hospitals')->onDelete('cascade');
             $table->integer('quantity')->default(0);
             $table->timestamps();
         });
