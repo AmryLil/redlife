@@ -1,188 +1,86 @@
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="csrf-token" content="{{ csrf_token() }}">
+<div>
+    <style>
+        .fi-main {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+        <path fill="rgb(220 38 38 / var(--tw-text-opacity, 1))" fill-opacity="1"
+            d="M0,128L40,149.3C80,171,160,213,240,229.3C320,245,400,235,480,234.7C560,235,640,245,720,234.7C800,224,880,192,960,170.7C1040,149,1120,139,1200,133.3C1280,128,1360,128,1400,128L1440,128L1440,0L1400,0C1360,0,1280,0,1200,0C1120,0,1040,0,960,0C880,0,800,0,720,0C640,0,560,0,480,0C400,0,320,0,240,0C160,0,80,0,40,0L0,0Z">
+        </path>
+    </svg>
 
-<title>{{ $title ?? 'Page Title' }}</title>
-<!-- Fonts -->
-<link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Section Tentang Kami -->
+    <div x-data="{ showSection: false }" x-intersect="showSection = true"
+        class="py-10 pt-0 px-6 md:px-32 space-y-16 -translate-y-5">
 
+        <!-- Visi Misi -->
+        <div class="grid md:grid-cols-2 gap-12" x-show="showSection"
+            x-transition:enter="transition ease-out duration-500 delay-200"
+            x-transition:enter-start="opacity-0 transform translate-x-12"
+            x-transition:enter-end="opacity-100 transform translate-x-0">
 
-<!-- Main Content -->
-<div class="max-w-3xl mx-auto px-4 py-8">
-    <!-- Progress Indicator -->
-    <div class="flex justify-center mb-8">
-        <div class="flex items-center">
-            <div class="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white">1</div>
-            <div class="w-16 h-1 bg-red-600"></div>
-            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">2</div>
-            <div class="w-16 h-1 bg-gray-300"></div>
-            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">3</div>
-        </div>
-    </div>
-
-    <!-- Donation Form -->
-    <div class="bg-white rounded-xl shadow-md p-6">
-        <!-- Step 1: Pre-Screening -->
-        <!-- Step 1: Pre-Screening - Expanded Version -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Cek Kelayakan Donor</h2>
-
-            <div class="bg-red-50 p-4 rounded-lg mb-6">
-                <p class="text-red-800 text-sm">
-                    🩸 Pastikan Anda memenuhi semua syarat sebelum melanjutkan
+            <div class="space-y-6">
+                <h2 class="text-4xl font-bold text-red-600">Visi Kami</h2>
+                <p class="text-gray-600 text-lg leading-relaxed">
+                    Menjadi platform penghubung donor darah terpercaya yang menyelamatkan jutaan nyawa
+                    melalui teknologi inovatif dan komunitas yang peduli.
                 </p>
             </div>
 
-            <!-- Basic Requirements -->
-            <div class="space-y-4">
-                <!-- Personal Health -->
-                <div class="border-b pb-4">
-                    <h3 class="font-medium text-gray-700 mb-3">Kesehatan Pribadi</h3>
-                    <div class="space-y-3">
-                        <label class="flex items-start gap-3">
-                            <input type="checkbox" class="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded">
-                            <span class="text-gray-700">
-                                Usia 17-65 tahun
-                                <span class="text-gray-500 text-sm">(di bawah 17 tahun perlu izin orang tua)</span>
-                            </span>
-                        </label>
-
-                        <label class="flex items-start gap-3">
-                            <input type="checkbox" class="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded">
-                            <span class="text-gray-700">
-                                Berat badan minimal 45 kg
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Medical History -->
-                <div class="border-b pb-4">
-                    <h3 class="font-medium text-gray-700 mb-3">Riwayat Kesehatan</h3>
-                    <div class="space-y-3">
-                        <label class="flex items-start gap-3">
-                            <input type="checkbox" class="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded">
-                            <span class="text-gray-700">
-                                Tidak sedang hamil/menyusui
-                                <span class="text-gray-500 text-sm">(untuk wanita)</span>
-                            </span>
-                        </label>
-
-                        <label class="flex items-start gap-3">
-                            <input type="checkbox" class="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded">
-                            <span class="text-gray-700">
-                                Tidak memiliki penyakit menular
-                                <span class="text-gray-500 text-sm">(HIV, Hepatitis B/C, dll)</span>
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Recent Activities -->
-                <div class="pb-4">
-                    <h3 class="font-medium text-gray-700 mb-3">Aktivitas Terakhir</h3>
-                    <div class="space-y-3">
-                        <label class="flex items-start gap-3">
-                            <input type="checkbox" class="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded">
-                            <span class="text-gray-700">
-                                Tidak melakukan tato/tindik dalam 6 bulan terakhir
-                            </span>
-                        </label>
-
-                        <label class="flex items-start gap-3">
-                            <input type="checkbox" class="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded">
-                            <span class="text-gray-700">
-                                Tidak bepergian ke daerah endemik malaria dalam 1 tahun terakhir
-                            </span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Validation Message -->
-            <div id="errorMessage" class="hidden mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm"></div>
-
-            <!-- Navigation -->
-            <div class="mt-6 flex justify-between">
-                <button class="px-4 py-2 text-gray-600 hover:text-red-600">
-                    ← Kembali
-                </button>
-                <button
-                    class="bg-red-600 text-white py-2 px-6 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
-                    id="checkEligibility">
-                    Cek Kelayakan →
-                </button>
+            <div class="space-y-6">
+                <h2 class="text-4xl font-bold text-red-600">Misi Kami</h2>
+                <ul class="space-y-4 text-gray-600">
+                    <li class="flex items-center space-x-3">
+                        <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <span>Menyediakan akses donor darah yang cepat dan transparan</span>
+                    </li>
+                    <!-- Tambahkan poin misi lainnya -->
+                </ul>
             </div>
         </div>
 
-        <!-- Step 2: Schedule -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Pilih Jadwal & Lokasi</h2>
+        <!-- Fitur Aplikasi -->
+        <div class="grid md:grid-cols-3 gap-8" x-data="{
+            features: [
+                { icon: '🚑', title: 'Respons Cepat', desc: 'Notifikasi real-time kebutuhan darah' },
+                { icon: '📱', title: 'Akses Mudah', desc: 'Booking donor melalui smartphone' },
+                { icon: '🏆', title: 'Reward System', desc: 'Poin untuk donor setia' }
+            ]
+        }">
 
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-gray-700 mb-2">Tanggal Donor</label>
-                    <input type="date" class="w-full p-2 border rounded-lg">
+            <template x-for="(feature, index) in features" :key="index">
+                <div class="p-8 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
+                    x-intersect="$el.style.opacity = 1; $el.style.transform = 'translateY(0)'"
+                    style="opacity: 0; transform: translateY(20px); transition: all 0.5s ease">
+                    <div class="text-6xl mb-6" x-text="feature.icon"></div>
+                    <h3 class="text-2xl font-bold mb-4" x-text="feature.title"></h3>
+                    <p class="text-gray-600" x-text="feature.desc"></p>
                 </div>
-
-                <div>
-                    <label class="block text-gray-700 mb-2">Lokasi Donor</label>
-                    <div class="space-y-2">
-                        <button class="w-full p-3 border rounded-lg hover:border-red-600 text-left">
-                            PMI Jakarta Pusat
-                        </button>
-                        <button class="w-full p-3 border rounded-lg hover:border-red-600 text-left">
-                            RS Siloam Kemang
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Map Placeholder -->
-            <div class="mt-4 bg-gray-100 h-48 rounded-lg flex items-center justify-center">
-                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            </div>
+            </template>
         </div>
 
-        <!-- Step 3: Confirmation -->
-        <div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Konfirmasi Donor</h2>
+        <!-- Statistik -->
+        <div class="text-center py-16" x-data="{ donors: 0, livesSaved: 0 }" x-init="animateNumber($el.querySelector('#donors'), 0, 12543, 2000);
+        animateNumber($el.querySelector('#lives'), 0, 37892, 2500);">
 
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <div class="flex justify-between mb-2">
-                    <span class="text-gray-600">Tanggal:</span>
-                    <span class="font-medium">25 Agustus 2023</span>
+            <h2 class="text-4xl font-bold mb-16">Dampak Kami</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="p-8 bg-red-100 rounded-2xl">
+                    <div class="text-6xl font-bold text-red-600 mb-4">
+                        <span id="donors" x-text="donors"></span>+
+                    </div>
+                    <p class="text-xl">Donor Terdaftar</p>
                 </div>
-                <div class="flex justify-between mb-2">
-                    <span class="text-gray-600">Lokasi:</span>
-                    <span class="font-medium">PMI Jakarta Pusat</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Jam:</span>
-                    <span class="font-medium">10:00 - 11:00 WIB</span>
+                <div class="p-8 bg-red-100 rounded-2xl">
+                    <div class="text-6xl font-bold text-red-600 mb-4">
+                        <span id="lives" x-text="livesSaved"></span>+
+                    </div>
+                    <p class="text-xl">Nyawa Tertolong</p>
                 </div>
             </div>
-
-            <button class="mt-6 w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition">
-                Konfirmasi Jadwal
-            </button>
         </div>
     </div>
 
-    <!-- Preparation Tips -->
-    <div class="mt-8 bg-white rounded-xl shadow-md p-6">
-        <h3 class="text-lg font-semibold mb-4">Persiapan Sebelum Donor</h3>
-        <ul class="list-disc pl-6 space-y-2 text-gray-600">
-            <li>Tidur minimal 6 jam sebelumnya</li>
-            <li>Makan makanan bergizi 2-3 jam sebelum donor</li>
-            <li>Bawa identitas diri (KTP/SIM)</li>
-        </ul>
-    </div>
 </div>

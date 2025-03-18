@@ -13,16 +13,16 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Http;
 use Livewire\Attributes\Validate;
 
 class DonorForm extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static ?string $navigationIcon = 'heroicon-o-heart';
-    protected static string $view            = 'filament.app.pages.donor-form';
-    public array $data                       = [];
-    public int $currentStep                  = 1;
+    protected static string $view = 'filament.app.pages.donor-form';
+    public array $data            = [];
+    public int $currentStep       = 1;
 
     public function form(Form $form): Form
     {
@@ -58,12 +58,20 @@ class DonorForm extends Page implements HasForms
                                         ->label('Tanggal Donor')
                                         ->minDate(now()->addDay())
                                         ->required(),
-                                    Select::make('lokasi_donor')
+                                    Select::make('lokasi_pengguna')
+                                        ->label('Pilih Kota atau Wilayah')
                                         ->options([
-                                            'PMI Jakarta Pusat'  => 'PMI Jakarta Pusat',
-                                            'RS Siloam'          => 'RS Siloam',
-                                            'UTD Kota Tangerang' => 'UTD Kota Tangerang',
+                                            'Jakarta'  => 'Jakarta',
+                                            'Bandung'  => 'Bandung',
+                                            'Surabaya' => 'Surabaya',
+                                            'Makassar' => 'Makassar',
                                         ])
+                                        ->live()
+                                        ->afterStateUpdated(fn($state, callable $set) => $set('lokasi_donor', null))
+                                        ->required(),
+                                    Select::make('lokasi_donor')
+                                        ->label('Tempat Donor Darah Terdekat')
+                                        ->options(fn($get) => $this->getDonorLocations($get('lokasi_pengguna')))
                                         ->required(),
                                     Select::make('waktu_donor')
                                         ->options([
@@ -160,5 +168,29 @@ class DonorForm extends Page implements HasForms
                 ->visible($this->currentStep === 3)
                 ->action('submit'),
         ];
+    }
+
+    public function getDonorLocations($lokasiPengguna)
+    {
+        $lokasiTerdaftar = [
+            'Jakarta'  => [
+                'PMI Jakarta Pusat' => 'PMI Jakarta Pusat',
+                'RS Cipto'          => 'RS Cipto Mangunkusumo',
+            ],
+            'Bandung'  => [
+                'PMI Bandung'      => 'PMI Bandung',
+                'RS Hasan Sadikin' => 'RS Hasan Sadikin',
+            ],
+            'Surabaya' => [
+                'PMI Surabaya'   => 'PMI Surabaya',
+                'RS Dr. Soetomo' => 'RS Dr. Soetomo',
+            ],
+            'Makassar' => [
+                'PMI Makassar' => 'PMI Makassar',
+                'RS Wahidin'   => 'RS Wahidin Sudirohusodo',
+            ],
+        ];
+
+        return $lokasiPengguna ? ($lokasiTerdaftar[$lokasiPengguna] ?? []) : [];
     }
 }

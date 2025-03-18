@@ -1,12 +1,10 @@
-<style>
-    .fi-main {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-</style>
-@vite(['resources/css/app.css', 'resources/js/app.js'])
-
 <div class="min-h-screen bg-gray-50">
+    <style>
+        .fi-main {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
     {{-- Hero Section --}}
     <div class="w-full h-64 md:h-96 relative bg-gray-900">
         <img src="{{ asset('images/donor.jpg') }}" alt="Ilustrasi donor darah"
@@ -20,18 +18,16 @@
 
     {{-- Form Section --}}
     <div class="max-w-7xl mx-auto md:px-32">
-        <x-filament::card class="!rounded-lg">
-            <div class="p-6 md:p-8">
-                {{ $this->form }}
+        <div class="py-10">
+            {{ $this->form }}
 
-                {{-- Form Actions --}}
-                <div class="flex justify-end gap-4 mt-8 border-t pt-6">
-                    <x-filament::button type="submit" wire:click="submit" icon="heroicon-o-heart" size="lg"
-                        class="!text-lg">
-                        Daftar Donor Sekarang
-                    </x-filament::button>
-                </div>
+            {{-- Form Actions --}}
+            <div class="flex justify-end gap-4 mt-8 border-t pt-6">
+                <x-filament::button type="submit" wire:click="submit" icon="heroicon-o-heart" size="lg"
+                    class="!text-lg">
+                    Daftar Donor Sekarang
+                </x-filament::button>
             </div>
-        </x-filament::card>
+        </div>
     </div>
 </div>

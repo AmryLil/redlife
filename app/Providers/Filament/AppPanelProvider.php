@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\App\Pages\AboutUs;
+use App\Filament\App\Pages\Home;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -20,6 +22,8 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AppPanelProvider extends PanelProvider
 {
+    protected static ?string $navigationLabel = 'Custom Navigation Label';
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -28,12 +32,15 @@ class AppPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Red,
             ])
+            ->brandName('BloodLink')
             ->viteTheme('resources/css/app.css')
             ->topNavigation()
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\Filament\App\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\Filament\App\Pages')
             ->pages([
+                AboutUs::class,
                 \App\Filament\Pages\DonorForm::class,
+                Home::class,
             ])
             ->discoverWidgets(in: app_path('Filament/App/Widgets'), for: 'App\Filament\App\Widgets')
             ->widgets([
