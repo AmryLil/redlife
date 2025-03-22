@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600&family=Tektur:wght@400..900&display=swap"
         rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap"
+        rel="stylesheet">
 </head>
 
 <body class=" h-screen w-full relative">
@@ -40,61 +43,93 @@
     </div>
 
     <div
-        class="w-full max-w-md absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 border border-slate-200 transition-all duration-300 rounded-md shadow-lg">
+        class="w-full max-w-md mx-auto bg-white p-8 border border-gray-200 rounded-2xl shadow-lg relative top-1/2 -translate-y-1/2">
 
-        @if (session('status'))
-            <div class="mb-4 bg-green-100 text-green-700 p-3 rounded-md shadow-md">
-                {{ session('status') }}
-            </div>
-        @endif
-
-        <div class="w-full flex justify-center items-center">
-            <img src="{{ asset('images/logo.png') }}" alt="" class="w-24 h-full object-cover">
-            <h1 class="text-2xl font-tektur font-bold">Leonicare</h1>
+        <!-- Logo -->
+        <div class="w-full flex flex-col items-center">
+            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="w-20 h-20 object-cover mb-2">
+            <h1 class="text-2xl font-semibold">Welcome back</h1>
+            <p class="text-gray-500 text-sm">Please enter your details to sign in.</p>
         </div>
 
+        <!-- Social Login Buttons -->
+        <div class="flex justify-center space-x-4 mt-6">
+            <button
+                class="w-16 h-12 flex items-center justify-center border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apple/apple-original.svg" class="w-5 h-5"
+                    alt="Apple">
+            </button>
+
+            <button
+                class="w-16 h-12 flex items-center justify-center border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="w-5 h-5"
+                    alt="Google">
+            </button>
+
+            <button
+                class="w-16 h-12 flex items-center justify-center border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition">
+                <img src="https://upload.wikimedia.org/wikipedia/en/6/60/Twitter_Logo_as_of_2021.svg" class="w-5 h-5"
+                    alt="Twitter">
+            </button>
+        </div>
+
+        <!-- Separator -->
+        <div class="flex items-center my-6">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <span class="mx-3 text-gray-500 text-sm">OR</span>
+            <div class="flex-grow border-t border-gray-300"></div>
+        </div>
+
+        <!-- Form -->
         <form method="POST" action="{{ route('login') }}" class="space-y-4">
             @csrf
 
+            <!-- Email -->
             <div>
-                <label class="block font-medium text-gray-700" for="email">Email</label>
+                <label class="block text-sm font-medium text-gray-700" for="email">E-Mail Address</label>
                 <input type="email" id="email" name="email"
-                    class="w-full px-4 py-2 border @error('email') border-red-500 @enderror rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
-                    value="{{ old('email') }}" required autofocus>
-                @error('email')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+                    class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
+                    placeholder="Enter your email..." required>
             </div>
 
+            <!-- Password -->
             <div>
-                <label class="block font-medium text-gray-700" for="password">Password</label>
-                <input type="password" id="password" name="password"
-                    class="w-full px-4 py-2 border @error('password') border-red-500 @enderror rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
-                    required>
-                @error('password')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
+                <label class="block text-sm font-medium text-gray-700" for="password">Password</label>
+                <div class="relative">
+                    <input type="password" id="password" name="password"
+                        class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
+                        placeholder="•••••••••••••" required>
+                    <span class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-400">
+                        👁️
+                    </span>
+                </div>
             </div>
 
-            <div class="flex items-center justify-between">
+            <!-- Remember Me & Forgot Password -->
+            <div class="flex items-center justify-between text-sm text-gray-600">
                 <label class="flex items-center">
                     <input type="checkbox" name="remember" class="mr-2">
-                    <span class="text-sm text-gray-600">Remember Me</span>
+                    <span>Remember me</span>
                 </label>
                 @if (Route::has('password.request'))
-                    <a href="{{ route('password.request') }}" class="text-sm text-red-500 hover:underline">Forgot
-                        Password?</a>
+                    <a href="{{ route('password.request') }}" class="text-red-500 hover:underline">Forgot password?</a>
                 @endif
             </div>
 
+            <!-- Sign In Button -->
             <button type="submit"
-                class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition duration-200 shadow-md">
-                Log in
+                class="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition duration-200 shadow-md">
+                Sign in
             </button>
 
-
+            <!-- Sign Up Link -->
+            <p class="text-center text-sm text-gray-600 mt-4">
+                Don't have an account yet? <a href="#" class="text-red-500 font-semibold hover:underline">Sign
+                    Up</a>
+            </p>
         </form>
     </div>
+
 
 
 </body>
