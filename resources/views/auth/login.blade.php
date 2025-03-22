@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600&family=Tektur:wght@400..900&display=swap"
+        rel="stylesheet">
 </head>
 
 <body class=" h-screen w-full relative">
@@ -38,18 +40,7 @@
     </div>
 
     <div
-        class="w-full max-w-md absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8  border border-slate-200 transform transition-all duration-300 rounded-md">
-
-
-        @if ($errors->any())
-            <div class="mb-4 bg-red-100 text-red-700 p-3 rounded-md shadow-md">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>⚠ {{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        class="w-full max-w-md absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 border border-slate-200 transition-all duration-300 rounded-md shadow-lg">
 
         @if (session('status'))
             <div class="mb-4 bg-green-100 text-green-700 p-3 rounded-md shadow-md">
@@ -57,21 +48,32 @@
             </div>
         @endif
 
+        <div class="w-full flex justify-center items-center">
+            <img src="{{ asset('images/logo.png') }}" alt="" class="w-24 h-full object-cover">
+            <h1 class="text-2xl font-tektur font-bold">Leonicare</h1>
+        </div>
+
         <form method="POST" action="{{ route('login') }}" class="space-y-4">
             @csrf
 
             <div>
                 <label class="block font-medium text-gray-700" for="email">Email</label>
                 <input type="email" id="email" name="email"
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
+                    class="w-full px-4 py-2 border @error('email') border-red-500 @enderror rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
                     value="{{ old('email') }}" required autofocus>
+                @error('email')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
                 <label class="block font-medium text-gray-700" for="password">Password</label>
                 <input type="password" id="password" name="password"
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
+                    class="w-full px-4 py-2 border @error('password') border-red-500 @enderror rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
                     required>
+                @error('password')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="flex items-center justify-between">
@@ -89,8 +91,12 @@
                 class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition duration-200 shadow-md">
                 Log in
             </button>
+
+
         </form>
     </div>
+
+
 </body>
 
 </html>
