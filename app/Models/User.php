@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -30,6 +32,12 @@ class User extends Authenticatable
     public $incrementing = false;
     protected $keyType   = 'int';
 
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Match antara panel ID dan role user
+        return $this->role === $panel->getId();
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -43,6 +51,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role'
     ];
 
     /**

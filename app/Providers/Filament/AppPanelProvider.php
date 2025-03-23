@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\App\Pages\AboutUs;
 use App\Filament\App\Pages\Home;
+use App\Http\Middleware\RedirectByRole;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -29,6 +30,7 @@ class AppPanelProvider extends PanelProvider
         return $panel
             ->id('app')
             ->path('app')
+            ->authGuard('web')
             ->colors([
                 'primary' => Color::Red,
             ])
@@ -60,6 +62,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+                RedirectByRole::class,
+            ], isPersistent: true);
     }
 }
