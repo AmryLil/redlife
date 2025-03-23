@@ -18,16 +18,34 @@
 
     {{-- Form Section --}}
     <div class="max-w-7xl mx-auto md:px-32">
-        <div class="py-10">
-            {{ $this->form }}
+        @if ($alreadyRegistered)
+            <div class="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-green-600">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Anda Sudah Terdaftar!
+                    </h2>
+                </div>
 
-            {{-- Form Actions --}}
+                <div class="space-y-4">
+                    <div class="flex justify-between border-b pb-2">
+                        <span class="font-medium">ID Pendaftaran:</span>
+                        <span class="text-gray-600">DONOR-{{ str_pad($donorData->id, 6, '0', STR_PAD_LEFT) }}</span>
+                    </div>
+
+                    <!-- Tambahkan detail lainnya -->
+                </div>
+            </div>
+        @else
+            {{-- Tampilan Form Registrasi --}}
+            <div class="max-w-7xl mx-auto md:px-32 mt-10">
+                {{ $this->form }}
+            </div>
             <div class="flex justify-end gap-4 mt-8 border-t pt-6">
-                <x-filament::button type="submit" wire:click="submit" icon="heroicon-o-heart" size="lg"
-                    class="!text-lg">
-                    Daftar Donor Sekarang
+                <x-filament::button type="submit" wire:click="submit" size="lg" class="!text-lg">
+                    Submit
                 </x-filament::button>
             </div>
-        </div>
+        @endif
     </div>
 </div>

@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('donation_statuses', function (Blueprint $table) {
             $table->id();
-            $table->string('status');  // pending, completed, rejected
+            $table->string('status');
             $table->timestamps();
         });
     }

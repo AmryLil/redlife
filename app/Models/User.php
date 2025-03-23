@@ -43,7 +43,7 @@ class User extends Authenticatable
         parent::boot();
 
         static::creating(function ($model) {
-            $model->id = crc32(\Illuminate\Support\Str::uuid());
+            $model->id = random_int(100000, 999999);
         });
     }
 
@@ -52,6 +52,10 @@ class User extends Authenticatable
         'email',
         'password',
         'role'
+    ];
+
+    protected $attributes = [
+        'role' => 'user',
     ];
 
     /**

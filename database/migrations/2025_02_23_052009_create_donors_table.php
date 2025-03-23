@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
-        Schema::create('donors', function (Blueprint $table) {
+        Schema::create('donations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->date('donation_date');
-            $table->string('location');
-            $table->enum('status', ['pending', 'completed'])->default('pending');
+            $table->string('time');
+            $table->foreignId('location_id')->constrained('donation_locations')->onDelete('cascade');
+            $table->foreignId('status_id')->constrained('donation_statuses')->onDelete('cascade');
             $table->timestamps();
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 

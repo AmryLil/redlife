@@ -9,10 +9,10 @@ class DonationLocation extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['location_name', 'location_detail', 'address', 'url_address', 'cover'];
+    protected $fillable = ['location_name', 'location_detail', 'address', 'url_address', 'cover', 'city'];
 
     public function donations()
     {
-        return $this->hasMany(Donor::class);
+        return $this->hasMany(Donations::class);
     }
 }

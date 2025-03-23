@@ -34,6 +34,9 @@ class DonationLocationsResource extends Resource
                         TextInput::make('location_name')
                             ->label('Location Name')
                             ->required(),
+                        TextInput::make('city')
+                            ->label('District/City')
+                            ->required(),
                         TextInput::make('address')
                             ->label('Address')
                             ->required(),
@@ -59,6 +62,8 @@ class DonationLocationsResource extends Resource
             ->columns([
                 TextColumn::make('location_name')
                     ->label('Location Name'),
+                TextColumn::make('city')
+                    ->label('District/City'),
                 TextColumn::make('address')
                     ->wrap(),
                 TextColumn::make('location_detail')

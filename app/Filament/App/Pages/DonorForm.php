@@ -2,6 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\DonationLocation;
+use App\Models\Donations;
+use App\Models\Donor;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
@@ -12,17 +16,30 @@ use Filament\Forms\Components\Wizard;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\Http;
-use Livewire\Attributes\Validate;
+use Illuminate\Support\Facades\Auth;
 
 class DonorForm extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string $view = 'filament.app.pages.donor-form';
-    public array $data            = [];
-    public int $currentStep       = 1;
+    protected static string $view  = 'filament.app.pages.donor-form';
+    public array $data             = [];
+    public int $currentStep        = 1;
+    public bool $alreadyRegistered = false;
+    public $donorData;
+
+    public function mount(): void
+    {
+        // Cek apakah user sudah terdaftar
+        $this->donorData         = Donations::where('user_id', Auth::id())->first();
+        $this->alreadyRegistered = (bool) $this->donorData;
+
+        if (!$this->alreadyRegistered) {
+            $this->form->fill();
+        }
+    }
 
     public function form(Form $form): Form
     {
@@ -34,6 +51,9 @@ class DonorForm extends Page implements HasForms
                             Section::make('Persyaratan Donor')
                                 ->description('Pastikan Anda memenuhi semua kriteria')
                                 ->schema([
+                                    TextInput::make('nama_lengkap')
+                                        ->label('Nama Lengkap')
+                                        ->required(),
                                     Checkbox::make('usia')
                                         ->label('Usia 17-65 tahun')
                                         ->required()
@@ -57,22 +77,22 @@ class DonorForm extends Page implements HasForms
                                     DatePicker::make('tanggal_donor')
                                         ->label('Tanggal Donor')
                                         ->minDate(now()->addDay())
-                                        ->required(),
+                                        ->required()
+                                        ->reactive(),
                                     Select::make('lokasi_pengguna')
                                         ->label('Pilih Kota atau Wilayah')
-                                        ->options([
-                                            'Jakarta'  => 'Jakarta',
-                                            'Bandung'  => 'Bandung',
-                                            'Surabaya' => 'Surabaya',
-                                            'Makassar' => 'Makassar',
-                                        ])
-                                        ->live()
-                                        ->afterStateUpdated(fn($state, callable $set) => $set('lokasi_donor', null))
-                                        ->required(),
+                                        ->options(DonationLocation::all()->pluck('city', 'city')->unique())
+                                        ->required()
+                                        ->reactive(),
                                     Select::make('lokasi_donor')
                                         ->label('Tempat Donor Darah Terdekat')
-                                        ->options(fn($get) => $this->getDonorLocations($get('lokasi_pengguna')))
-                                        ->required(),
+                                        ->options(function (callable $get) {
+                                            $kota = $get('lokasi_pengguna');
+                                            return DonationLocation::where('city', $kota)
+                                                ->pluck('location_name', 'id');
+                                        })
+                                        ->required()
+                                        ->reactive(),
                                     Select::make('waktu_donor')
                                         ->options([
                                             '08:00' => '08:00 - 09:00',
@@ -88,13 +108,32 @@ class DonorForm extends Page implements HasForms
                                 ->schema([
                                     TextInput::make('nama_lengkap')
                                         ->disabled()
-                                        ->dehydrated(),
+                                        ->dehydrated()
+                                        ->default(function ($get) {
+                                            return $get('nama_lengkap');
+                                        }),
                                     TextInput::make('summary_tanggal')
                                         ->label('Tanggal Donor')
-                                        ->disabled(),
+                                        ->disabled()
+                                        ->dehydrated()
+                                        ->default(function ($get) {
+                                            return Carbon::parse($get('tanggal_donor'))->translatedFormat('d F Y');
+                                        }),
                                     TextInput::make('summary_lokasi')
                                         ->label('Lokasi Donor')
-                                        ->disabled(),
+                                        ->disabled()
+                                        ->dehydrated()
+                                        ->default(function ($get) {
+                                            $location = DonationLocation::find($get('lokasi_donor'));
+                                            return $location ? "{$location->nama_lokasi} - {$location->alamat}" : '';
+                                        }),
+                                    TextInput::make('waktu_donor')
+                                        ->label('Waktu Donor')
+                                        ->disabled()
+                                        ->dehydrated()
+                                        ->default(function ($get) {
+                                            return $get('waktu_donor');
+                                        }),
                                 ]),
                         ]),
                 ])
@@ -102,25 +141,26 @@ class DonorForm extends Page implements HasForms
             ->statePath('data');
     }
 
-    public function mount(): void
-    {
-        $this->form->fill();
-    }
-
     public function nextStep()
     {
+        if ($this->alreadyRegistered)
+            return;
+
+        // Validasi step 1
         if ($this->currentStep === 1) {
             $this->validate([
-                'data.usia'        => 'accepted',
-                'data.berat_badan' => 'accepted',
-                'data.persetujuan' => 'accepted',
+                'data.nama_lengkap' => 'required|string|max:255',
+                'data.usia'         => 'accepted',
+                'data.berat_badan'  => 'accepted',
+                'data.persetujuan'  => 'accepted',
             ]);
         }
 
+        // Validasi step 2
         if ($this->currentStep === 2) {
             $this->validate([
-                'data.tanggal_donor' => 'required|date',
-                'data.lokasi_donor'  => 'required',
+                'data.tanggal_donor' => 'required|date|after:today',
+                'data.lokasi_donor'  => 'required|exists:donation_locations,id',
                 'data.waktu_donor'   => 'required',
             ]);
         }
@@ -130,30 +170,42 @@ class DonorForm extends Page implements HasForms
         }
     }
 
-    public function previousStep()
-    {
-        if ($this->currentStep > 1) {
-            $this->currentStep--;
-        }
-    }
-
     public function submit()
     {
-        // Simpan data ke database
-        \App\Models\Donor::create([
-            'nama'    => $this->data['nama_lengkap'],
-            'tanggal' => $this->data['tanggal_donor'],
-            'lokasi'  => $this->data['lokasi_donor'],
-            'waktu'   => $this->data['waktu_donor'],
+        if ($this->alreadyRegistered)
+            return;
+
+        $this->validate([
+            'data.tanggal_donor' => 'required|date|after:today',
+            'data.lokasi_donor'  => 'required|exists:donation_locations,id',
+            'data.waktu_donor'   => 'required',
         ]);
 
+        // Simpan data
+        $donor = Donations::create([
+            'user_id'       => Auth::id(),
+            'donation_date' => $this->data['tanggal_donor'],
+            'location_id'   => $this->data['lokasi_donor'],
+            'time'          => $this->data['waktu_donor'],
+            'status_id'     => 1,
+        ]);
+
+        // Update data dan status
+        $this->donorData         = $donor;
+        $this->alreadyRegistered = true;
         $this->form->fill();
-        $this->currentStep = 1;
-        $this->notify('success', 'Pendaftaran donor berhasil!');
+
+        Notification::make()
+            ->title('Pendaftaran Berhasil!')
+            ->success()
+            ->send();
     }
 
     protected function getFormActions(): array
     {
+        if ($this->alreadyRegistered)
+            return [];
+
         return [
             Action::make('previous')
                 ->label('Kembali')
@@ -168,29 +220,5 @@ class DonorForm extends Page implements HasForms
                 ->visible($this->currentStep === 3)
                 ->action('submit'),
         ];
-    }
-
-    public function getDonorLocations($lokasiPengguna)
-    {
-        $lokasiTerdaftar = [
-            'Jakarta'  => [
-                'PMI Jakarta Pusat' => 'PMI Jakarta Pusat',
-                'RS Cipto'          => 'RS Cipto Mangunkusumo',
-            ],
-            'Bandung'  => [
-                'PMI Bandung'      => 'PMI Bandung',
-                'RS Hasan Sadikin' => 'RS Hasan Sadikin',
-            ],
-            'Surabaya' => [
-                'PMI Surabaya'   => 'PMI Surabaya',
-                'RS Dr. Soetomo' => 'RS Dr. Soetomo',
-            ],
-            'Makassar' => [
-                'PMI Makassar' => 'PMI Makassar',
-                'RS Wahidin'   => 'RS Wahidin Sudirohusodo',
-            ],
-        ];
-
-        return $lokasiPengguna ? ($lokasiTerdaftar[$lokasiPengguna] ?? []) : [];
     }
 }
