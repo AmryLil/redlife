@@ -14,7 +14,6 @@ class BloodStock extends Model
         'storage_location_id',
         'donation_id',
         'quantity',
-        'collection_date',
         'expiry_date',
         'status',
         'blood_component'
@@ -28,6 +27,11 @@ class BloodStock extends Model
     public function storageLocation()
     {
         return $this->belongsTo(StorageLocations::class, 'storage_location_id');
+    }
+
+    public function donations()
+    {
+        return $this->belongsTo(Donations::class, 'donation_id');
     }
 
     // Fungsi untuk mengecek apakah darah sudah kedaluwarsa

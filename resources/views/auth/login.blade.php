@@ -99,9 +99,15 @@
                     <input type="password" id="password" name="password"
                         class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:outline-none shadow-sm"
                         placeholder="•••••••••••••" required>
-                    <span class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-400">
-                        👁️
-                    </span>
+                    <svg class="absolute top-3.5 right-3" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" id="Eye--Streamline-Guidance-Free" height="24" width="24">
+                        <desc>Eye Streamline Icon: https://streamlinehq.com</desc>
+                        <path stroke="#000000"
+                            d="M6.106 7.053a8.079 8.079 0 0 1 11.788 0L20.5 10c1 1 2.224 2 3.5 2 -1.276 0 -2.5 1 -3.5 2l-2.606 2.947a8.079 8.079 0 0 1 -11.788 0L3.5 14c-1 -1 -2.224 -2 -3.5 -2 1.276 0 2.5 -1 3.5 -2l2.606 -2.947Z"
+                            stroke-width="1"></path>
+                        <path stroke="#000000" d="M9.5 12a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1 -5 0Z" stroke-width="1">
+                        </path>
+                    </svg>
                 </div>
             </div>
 

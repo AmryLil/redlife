@@ -91,4 +91,18 @@ class User extends Authenticatable
             'password'          => 'hashed',
         ];
     }
+
+    public function detail()
+    {
+        return $this->hasOne(UserDetail::class);
+    }
+
+    public function isProfileComplete(): bool
+    {
+        return $this->detail &&
+            !empty($this->detail->phone) &&
+            !empty($this->detail->address) &&
+            !empty($this->detail->birthdate) &&
+            !empty($this->detail->id_card);
+    }
 }

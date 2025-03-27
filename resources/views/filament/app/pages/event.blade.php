@@ -1,12 +1,18 @@
-<x-filament::page>
-    <div class="relative w-full h-64 bg-cover bg-center"
-        style="background-image: url('https://source.unsplash.com/1600x900/?blood,donation');">
-        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <h1 class="text-white text-4xl font-bold">Event Donor Darah</h1>
-        </div>
-    </div>
+<div>
+    <style>
+        .fi-main {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    </style>
+    <svg class="w-screen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+        <path fill="rgb(220 38 38 / var(--tw-text-opacity, 1))" fill-opacity="1"
+            d="M0,128L40,149.3C80,171,160,213,240,229.3C320,245,400,235,480,234.7C560,235,640,245,720,234.7C800,224,880,192,960,170.7C1040,149,1120,139,1200,133.3C1280,128,1360,128,1400,128L1440,128L1440,0L1400,0C1360,0,1280,0,1200,0C1120,0,1040,0,960,0C880,0,800,0,720,0C640,0,560,0,480,0C400,0,320,0,240,0C160,0,80,0,40,0L0,0Z">
+        </path>
+    </svg>
+    <h1 class="absolute top-32 left-64 font-bold text-slate-50 text-6xl">Events</h1>
 
-    <div class="max-w-6xl mx-auto p-6">
+    <div class=" mx-auto p-6 px-32 w-screen">
         <p class="text-gray-600 text-center text-lg mb-6">
             Bergabunglah dalam event donor darah dan selamatkan nyawa orang lain!
         </p>
@@ -26,4 +32,5 @@
             @endforeach
         </div>
     </div>
-</x-filament::page>
+
+</div>

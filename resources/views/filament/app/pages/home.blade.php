@@ -21,6 +21,11 @@
         margin: 0 !important;
         padding: 0 !important;
     }
+
+    .fi-main {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
 </style>
 
 <!-- Scripts -->
@@ -29,62 +34,20 @@
 <!-- Styles -->
 @livewireStyles
 
-<div>
+<div class="w-screen">
     <section>
-        <div class=" bg-red-600 w-full h-80 flex gap-2 text-slate-50 p-6 justify-between">
-            <div class="w-full space-y-5">
-                <div>
-                    <h1 class="text-xl font-bold">Setetes Darah Kita, Nyawa Bagi Sesama</h1>
-                    <h3 class="font-extralight">Bergabunglah dengan komunitas donor darah!</h3>
-                </div>
-
-                <div class="bg-white rounded-md p-6 space-y-6">
-                    <div class="flex w-full gap-4">
-                        <div class="w-1/2 space-y-2">
-                            <label for="" class=" text-slate-950 font-semibold">Golongan Darah</label>
-                            <x-input class="w-full"></x-input>
-                        </div>
-
-                        <div class="w-1/2 space-y-2">
-                            <label for="" class="text-slate-950 font-semibold">Rhesus</label>
-                            <x-input class="w-full"></x-input>
-                        </div>
-                    </div>
-                    <button class="bg-red-600 w-full rounded-md py-2 text-lg font-bold">
-                        Cari Sekarang
-                    </button>
+        <div class="w-full h-64 md:h-[610px] relative bg-gray-900">
+            <img src="{{ asset('images/banner_donor.jpg') }}" alt="Ilustrasi donor darah"
+                class="w-full h-full object-cover object-[0px_40%] opacity-75">
+            <div class="absolute inset-0 flex items-center justify-center md:justify-start md:px-32 bg-black/30">
+                <div class="text-white text-center md:text-left text-2xl md:text-4xl font-bold max-w-2xl px-4">
+                    Setetes darahmu, selamatkan hidup mereka. Jadi pahlawan tanpa jubah hari ini!
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-4 w-full justify-center items-center p-10">
-                <div class="text-lg font-bold">
-                    <h1>150+</h1>
-                    <h2>Pendonor Aktif</h2>
-                </div>
-                <div class="text-lg font-bold">
-                    <h1>80</h1>
-                    <h2>Tersedia</h2>
-                </div>
-                <div class="text-lg font-bold">
-                    <h1>24</h1>
-                    <h2>Jam Layanan</h2>
-                </div>
-                <div class="text-lg font-bold">
-                    <h1>100%</h1>
-                    <h2>Keamanan</h2>
-                </div>
-            </div>
-
-
         </div>
     </section>
-    <section class="mt-4">
-        <h1 class="font-bold text-xl text-slate-600">Stok Darah Tersedia</h1>
-        <div class="p-4">
-            <x-card-product></x-card-product>
-        </div>
 
-    </section>
-    <section>
+    <section class="px-32 mt-10">
         <h1 class="w-full text-center font-bold text-2xl">Mengapa Perlu Donor Darah?</h1>
         <div>
             <div class="flex gap-4 mt-4">
@@ -151,7 +114,7 @@
             </div>
         </div>
     </section>
-    <section class="mt-8">
+    <section class="mt-8 px-32">
         <h1 class="w-full text-center font-bold text-2xl">Bagaimana Proses Donor Darah?</h1>
 
         <ol class="items-center sm:flex mt-5 p-4 w-full justify-center ml-14">

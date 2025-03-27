@@ -2,25 +2,29 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\DonorsResource\Pages;
-use App\Filament\Resources\DonorsResource\RelationManagers;
+use App\Filament\Resources\DonorMonitoringResource\Pages;
+use App\Filament\Resources\DonorMonitoringResource\RelationManagers;
 use App\Models\Donations;
 use App\Models\DonationStatus;
-use App\Models\Donor;
-use App\Models\Donors;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use Filament\Forms;
 use Filament\Tables;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class DonorsResource extends Resource
+class DonorMonitoringResource extends Resource
 {
     protected static ?string $model           = Donations::class;
-    protected static ?string $navigationIcon  = 'heroicon-o-circle-stack';
-    protected static ?string $navigationLabel = 'Donations';
+    protected static ?string $navigationLabel = 'Monitoring Donor';
+    protected static ?string $navigationIcon  = 'heroicon-o-rectangle-stack';
+
+    // Tambahkan status rejected
+    protected static array $statuses = [
+        1 => 'Pending',
+        2 => 'Completed',
+        3 => 'Rejected',  // Tambahkan status rejected
+    ];
 
     public static function form(Form $form): Form
     {
@@ -49,12 +53,15 @@ class DonorsResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn(Builder $query) => $query->whereNotIn('status_id', [3, 5]))
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('Donation ID')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Donor Name')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('donation_date')
                     ->label('Date')
@@ -79,13 +86,34 @@ class DonorsResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status_id')
                     ->label('Status')
-                    ->options([
-                        1 => 'Pending',
-                        2 => 'Completed',
-                    ]),
+                    ->options(static::$statuses),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('updateStatus')
+                    ->label('Ubah Status')
+                    ->icon('heroicon-o-pencil')
+                    ->modalHeading('Update Donation Status')
+                    ->form([
+                        Forms\Components\Select::make('status_id')
+                            ->label('Status')
+                            ->options(DonationStatus::all()->pluck('status', 'id'))
+                            ->required()
+                    ])
+                    ->action(function (Donations $record, array $data) {
+                        $record->status_id = $data['status_id'];
+                        $record->save();
+
+                        // Tambahkan redirect jika status completed
+                        if ($data['status_id'] == 5) {  // ID 2 = Completed
+                            return redirect()->to(
+                                BloodStockResource::getUrl('create', [
+                                    'donation_id' => $record->id,
+                                    'name'        => $record->user_id,
+                                    'date'        => $record->donation_date,
+                                ])
+                            );
+                        }
+                    }),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -95,20 +123,12 @@ class DonorsResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListDonors::route('/'),
-            'create' => Pages\CreateDonors::route('/create'),
-            'view'   => Pages\ViewDonors::route('/{record}'),
-            'edit'   => Pages\EditDonors::route('/{record}/edit'),
+            'index'  => Pages\ListDonorMonitorings::route('/'),
+            'create' => Pages\CreateDonorMonitoring::route('/create'),
+            'edit'   => Pages\EditDonorMonitoring::route('/{record}/edit'),
         ];
     }
 }

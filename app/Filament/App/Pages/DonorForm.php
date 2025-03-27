@@ -19,6 +19,7 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class DonorForm extends Page implements HasForms
 {
@@ -49,10 +50,23 @@ class DonorForm extends Page implements HasForms
                     Wizard\Step::make('1. Skrining Kesehatan')
                         ->schema([
                             Section::make('Persyaratan Donor')
-                                ->description('Pastikan Anda memenuhi semua kriteria')
+                                ->description(function () {
+                                    if (!auth()->user()->isProfileComplete()) {
+                                        return new HtmlString('
+                                        <div class="flex items-center gap-2 text-red-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>Data Pribadi Anda belum lengkap, Tolong lengkapi terlebih dahulu!</span>
+                                        </div>
+                                    ');
+                                    }
+                                    return 'Silahkan lanjutkan';
+                                })
                                 ->schema([
                                     TextInput::make('nama_lengkap')
                                         ->label('Nama Lengkap')
+                                        ->default(auth()->user()->name)
                                         ->required(),
                                     Checkbox::make('usia')
                                         ->label('Usia 17-65 tahun')
@@ -69,7 +83,18 @@ class DonorForm extends Page implements HasForms
                                         ->label('Menyetujui syarat dan ketentuan donor darah')
                                         ->required(),
                                 ]),
-                        ]),
+                        ])
+                        ->beforeValidation(function () {
+                            if (!auth()->user()->isProfileComplete()) {
+                                Notification::make()
+                                    ->title('Profil Tidak Lengkap')
+                                    ->body('Lengkapi data diri di halaman profil')
+                                    ->warning()
+                                    ->persistent()
+                                    ->send();
+                                return redirect()->route('filament.app.pages.profile');
+                            }
+                        }),
                     Wizard\Step::make('2. Jadwal Donor')
                         ->schema([
                             Section::make('Pilih Jadwal')

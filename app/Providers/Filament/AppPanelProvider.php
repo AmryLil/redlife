@@ -9,6 +9,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use Filament\Pages;
 use Filament\Panel;
@@ -43,6 +44,12 @@ class AppPanelProvider extends PanelProvider
                 AboutUs::class,
                 \App\Filament\Pages\DonorForm::class,
                 Home::class,
+            ])
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('My Profile')
+                    ->url('profile')
+                    ->icon('heroicon-o-cog-6-tooth'),
             ])
             ->discoverWidgets(in: app_path('Filament/App/Widgets'), for: 'App\Filament\App\Widgets')
             ->widgets([

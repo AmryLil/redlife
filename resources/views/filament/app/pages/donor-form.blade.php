@@ -6,18 +6,15 @@
         }
     </style>
     {{-- Hero Section --}}
-    <div class="w-full h-64 md:h-96 relative bg-gray-900">
-        <img src="{{ asset('images/donor.jpg') }}" alt="Ilustrasi donor darah"
-            class="w-full h-full object-cover object-[0px_12%] opacity-75">
-        <div class="absolute inset-0 flex items-center justify-center md:justify-start md:px-32 bg-black/30">
-            <div class="text-white text-center md:text-left text-2xl md:text-4xl font-bold max-w-2xl px-4">
-                Setetes darahmu, selamatkan hidup mereka. Jadi pahlawan tanpa jubah hari ini!
-            </div>
-        </div>
-    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+        <path fill="rgb(220 38 38 / var(--tw-text-opacity, 1))" fill-opacity="1"
+            d="M0,128L40,149.3C80,171,160,213,240,229.3C320,245,400,235,480,234.7C560,235,640,245,720,234.7C800,224,880,192,960,170.7C1040,149,1120,139,1200,133.3C1280,128,1360,128,1400,128L1440,128L1440,0L1400,0C1360,0,1280,0,1200,0C1120,0,1040,0,960,0C880,0,800,0,720,0C640,0,560,0,480,0C400,0,320,0,240,0C160,0,80,0,40,0L0,0Z">
+        </path>
+    </svg>
+    <h1 class="absolute top-32 left-64 font-bold text-slate-50 text-6xl">Donations</h1>
 
     {{-- Form Section --}}
-    <div class="max-w-7xl mx-auto md:px-32">
+    <div class="mx-auto md:px-32">
         @if ($alreadyRegistered)
             <div class="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow">
                 <div class="text-center mb-6">
@@ -38,7 +35,7 @@
             </div>
         @else
             {{-- Tampilan Form Registrasi --}}
-            <div class="max-w-7xl mx-auto md:px-32 mt-10">
+            <div class=" mt-10">
                 {{ $this->form }}
             </div>
             <div class="flex justify-end gap-4 mt-8 border-t pt-6">

@@ -13,6 +13,6 @@ class DonationStatus extends Model
 
     public function donor()
     {
-        return $this->hasMany(Donor::class);
+        return $this->hasMany(Donations::class);
     }
 }
