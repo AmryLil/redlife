@@ -11,12 +11,7 @@ class BloodStock extends Model
 
     protected $fillable = [
         'blood_type_id',
-        'storage_location_id',
-        'donation_id',
-        'quantity',
-        'expiry_date',
-        'status',
-        'blood_component'
+        'total_quantity',
     ];
 
     public function bloodType()
@@ -24,19 +19,10 @@ class BloodStock extends Model
         return $this->belongsTo(BloodTypes::class, 'blood_type_id');
     }
 
-    public function storageLocation()
+    public function bloodStock()
     {
-        return $this->belongsTo(StorageLocations::class, 'storage_location_id');
-    }
-
-    public function donations()
-    {
-        return $this->belongsTo(Donations::class, 'donation_id');
+        return $this->belongsTo(BloodStock::class);
     }
 
     // Fungsi untuk mengecek apakah darah sudah kedaluwarsa
-    public function isExpired(): bool
-    {
-        return now()->greaterThan($this->expiry_date);
-    }
 }

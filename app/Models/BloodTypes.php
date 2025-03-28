@@ -20,4 +20,9 @@ class BloodTypes extends Model
     {
         return $this->hasMany(BloodStock::class);
     }
+
+    public function getFullTypeAttribute()
+    {
+        return $this->group . $this->rhesus;
+    }
 }

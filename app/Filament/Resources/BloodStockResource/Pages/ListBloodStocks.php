@@ -3,8 +3,9 @@
 namespace App\Filament\Resources\BloodStockResource\Pages;
 
 use App\Filament\Resources\BloodStockResource;
-use Filament\Actions;
+use App\Filament\Widgets\BloodStock;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Actions;
 
 class ListBloodStocks extends ListRecords
 {
@@ -14,6 +15,13 @@ class ListBloodStocks extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            BloodStock::class,
         ];
     }
 }

@@ -3,7 +3,9 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BloodStockResource\Pages;
+use App\Filament\Widgets\BloodStock as WidgetsBloodStock;
 use App\Models\BloodStock;
+use App\Models\BloodStockDetail;
 use App\Models\BloodTypes;
 use App\Models\User;
 use Filament\Forms\Components\DatePicker;
@@ -21,7 +23,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BloodStockResource extends Resource
 {
-    protected static ?string $model           = BloodStock::class;
+    protected static ?string $model           = BloodStockDetail::class;
     protected static ?string $navigationIcon  = 'heroicon-o-server-stack';
     protected static ?string $navigationLabel = 'Blood Stock';
 
@@ -49,12 +51,32 @@ class BloodStockResource extends Resource
                     ->visible(fn($operation) => $operation === 'create')
                     ->label('Collection Date')
                     ->disabled(),
-                Select::make('blood_type_id')
+                Forms\Components\Select::make('blood_type_id')
                     ->label('Blood Types')
-                    ->options(fn() => BloodTypes::all()->mapWithKeys(fn($bloodType) => [
+                    ->options(BloodTypes::all()->mapWithKeys(fn($bloodType) => [
                         $bloodType->id => "{$bloodType->group}{$bloodType->rhesus}"
                     ]))
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, callable $set, $get) {
+                        if (!is_numeric($state))
+                            return;
+
+                        // Cari atau buat blood stock dengan quantity default 0
+                        $bloodStock = BloodStock::firstOrCreate(
+                            ['blood_type_id' => $state],
+                            ['total_quantity' => 0]  // Set initial ke 0
+                        );
+
+                        // Tambah quantity 1 saat memilih blood type
+                        $bloodStock->increment('total_quantity');
+
+                        $set('blood_stock_id', $bloodStock->id);
+                    })
                     ->searchable(),
+                Forms\Components\Hidden::make('blood_stock_id')
+                    ->dehydrated()
+                    ->required(),
                 Forms\Components\Select::make('storage_location_id')
                     ->relationship('storageLocation', 'name')
                     ->label('Storage Location')
@@ -104,43 +126,22 @@ class BloodStockResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->schema([
-                Section::make('Informasi Utama')
-                    ->columns([
-                        Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
-                        Tables\Columns\TextColumn::make('donations.user.name')->label('Name')->sortable(),
-                        Tables\Columns\TextColumn::make('bloodType')->label('Blood Type')->formatStateUsing(function ($record) {
-                            return optional($record->bloodType)->group . optional($record->bloodType)->rhesus;
-                        }),
-                        Tables\Columns\TextColumn::make('storageLocation.name')->label('Storage Location')->sortable(),
-                        Tables\Columns\TextColumn::make('quantity')->label('Quantity')->sortable(),
-                        Tables\Columns\TextColumn::make('expiry_date')->label('Expiry Date')->date()->sortable(),
-                        Tables\Columns\BadgeColumn::make('status')
-                            ->label('Status')
-                            ->colors([
-                                'success' => 'available',
-                                'warning' => 'reserved',
-                                'danger'  => 'expired',
-                            ]),
+            ->columns([
+                Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
+                Tables\Columns\TextColumn::make('donations.user.name')->label('Name')->sortable(),
+                Tables\Columns\TextColumn::make('bloodType')->label('Blood Type')->formatStateUsing(function ($record) {
+                    return optional($record->bloodType)->group . optional($record->bloodType)->rhesus;
+                }),
+                Tables\Columns\TextColumn::make('storageLocation.name')->label('Storage Location')->sortable(),
+                Tables\Columns\TextColumn::make('quantity')->label('Quantity')->sortable(),
+                Tables\Columns\TextColumn::make('expiry_date')->label('Expiry Date')->date()->sortable(),
+                Tables\Columns\BadgeColumn::make('status')
+                    ->label('Status')
+                    ->colors([
+                        'success' => 'available',
+                        'warning' => 'reserved',
+                        'danger'  => 'expired',
                     ]),
-                Section::make('Informasi Utama')
-                    ->columns([
-                        Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
-                        Tables\Columns\TextColumn::make('donations.user.name')->label('Name')->sortable(),
-                        Tables\Columns\TextColumn::make('bloodType')->label('Blood Type')->formatStateUsing(function ($record) {
-                            return optional($record->bloodType)->group . optional($record->bloodType)->rhesus;
-                        }),
-                        Tables\Columns\TextColumn::make('storageLocation.name')->label('Storage Location')->sortable(),
-                        Tables\Columns\TextColumn::make('quantity')->label('Quantity')->sortable(),
-                        Tables\Columns\TextColumn::make('expiry_date')->label('Expiry Date')->date()->sortable(),
-                        Tables\Columns\BadgeColumn::make('status')
-                            ->label('Status')
-                            ->colors([
-                                'success' => 'available',
-                                'warning' => 'reserved',
-                                'danger'  => 'expired',
-                            ]),
-                    ])
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('blood_component')
@@ -180,6 +181,13 @@ class BloodStockResource extends Resource
             'index'  => Pages\ListBloodStocks::route('/'),
             'create' => Pages\CreateBloodStock::route('/create'),
             'edit'   => Pages\EditBloodStock::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            \App\Filament\Widgets\BloodStock::class
         ];
     }
 }
