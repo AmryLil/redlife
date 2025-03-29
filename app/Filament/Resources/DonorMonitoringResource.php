@@ -17,7 +17,7 @@ class DonorMonitoringResource extends Resource
 {
     protected static ?string $model           = Donations::class;
     protected static ?string $navigationLabel = 'Monitoring Donor';
-    protected static ?string $navigationIcon  = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon  = 'carbon-cloud-monitoring';
 
     // Tambahkan status rejected
     protected static array $statuses = [

@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class BloodStockResource extends Resource
 {
     protected static ?string $model           = BloodStockDetail::class;
-    protected static ?string $navigationIcon  = 'heroicon-o-server-stack';
+    protected static ?string $navigationIcon  = 'healthicons-f-blood-o-p';
     protected static ?string $navigationLabel = 'Blood Stock';
 
     public static function form(Form $form): Form
@@ -126,8 +126,8 @@ class BloodStockResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->heading('Blood Stock Details')
             ->columns([
-                Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 Tables\Columns\TextColumn::make('donations.user.name')->label('Name')->sortable(),
                 Tables\Columns\TextColumn::make('bloodType')->label('Blood Type')->formatStateUsing(function ($record) {
                     return optional($record->bloodType)->group . optional($record->bloodType)->rhesus;

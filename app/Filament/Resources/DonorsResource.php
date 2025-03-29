@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class DonorsResource extends Resource
 {
     protected static ?string $model           = Donations::class;
-    protected static ?string $navigationIcon  = 'heroicon-o-circle-stack';
+    protected static ?string $navigationIcon  = 'healthicons-f-blood-pressure-2';
     protected static ?string $navigationLabel = 'Donations';
 
     public static function form(Form $form): Form

@@ -25,7 +25,8 @@ class BloodStock extends BaseWidget
                     ->label('Total Quantity')
                     ->numeric()
                     ->sortable(),
-            ]);
+            ])
+            ->paginated([3, 5, 8], 'simple');
     }
 
     // Fix 1: Tambahkan method untuk menentukan key

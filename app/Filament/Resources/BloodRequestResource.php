@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class BloodRequestResource extends Resource
 {
     protected static ?string $model          = BloodRequest::class;
-    protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
+    protected static ?string $navigationIcon = 'fluentui-branch-request-20';
 
     public static function form(Form $form): Form
     {

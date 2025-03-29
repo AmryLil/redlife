@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\BloodStockDetail;
 use App\Observers\BloodStockDetailObserver;
+use App\View\Components\Icons\BloodDrop;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
