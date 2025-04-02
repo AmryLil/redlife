@@ -1,4 +1,5 @@
 <div class="w-full h-full">
+    <link href="https://fonts.googleapis.com/css2?family=Boldonse&display=swap" rel="stylesheet">
     <style>
         .fi-main {
             margin: 0 !important;
@@ -10,7 +11,7 @@
             d="M0,128L40,149.3C80,171,160,213,240,229.3C320,245,400,235,480,234.7C560,235,640,245,720,234.7C800,224,880,192,960,170.7C1040,149,1120,139,1200,133.3C1280,128,1360,128,1400,128L1440,128L1440,0L1400,0C1360,0,1280,0,1200,0C1120,0,1040,0,960,0C880,0,800,0,720,0C640,0,560,0,480,0C400,0,320,0,240,0C160,0,80,0,40,0L0,0Z">
         </path>
     </svg>
-    <h1 class="absolute top-32 left-64 font-bold text-slate-50 text-6xl">Profile</h1>
+    <h1 class="absolute top-40 font-boldonse left-64 font-bold text-slate-50 text-6xl">Profile</h1>
 
     <div class=" mx-auto w-screen p-6 px-32 -translate-y-14">
 

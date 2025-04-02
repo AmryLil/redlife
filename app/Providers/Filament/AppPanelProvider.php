@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\App\Pages\AboutUs;
+use App\Filament\App\Pages\BloodSupply;
 use App\Filament\App\Pages\Home;
 use App\Http\Middleware\RedirectByRole;
 use Filament\Http\Middleware\Authenticate;
@@ -10,6 +11,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationItem;
 use Filament\Support\Colors\Color;
 use Filament\Pages;
 use Filament\Panel;
@@ -35,15 +37,15 @@ class AppPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Red,
             ])
-            ->brandName('BloodLink')
+            ->brandName('Leonicare')
             ->viteTheme('resources/css/app.css')
             ->topNavigation()
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\Filament\App\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\Filament\App\Pages')
             ->pages([
                 AboutUs::class,
-                \App\Filament\Pages\DonorForm::class,
                 Home::class,
+                BloodSupply::class,
             ])
             ->userMenuItems([
                 MenuItem::make()

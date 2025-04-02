@@ -24,6 +24,7 @@ export default {
             fontFamily: {
                 sans: ["Figtree", ...defaultTheme.fontFamily.sans],
                 tektur: ["Tektur"],
+                boldonse: ["Boldonse"],
             },
         },
     },

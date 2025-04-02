@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\BloodStockDetail;
 use App\Models\DonationLocation;
 use App\Models\Donations;
 use App\Models\Donor;
@@ -30,11 +31,17 @@ class DonorForm extends Page implements HasForms
     public int $currentStep        = 1;
     public bool $alreadyRegistered = false;
     public $donorData;
+    public $bloodDetails;
 
     public function mount(): void
     {
         // Cek apakah user sudah terdaftar
-        $this->donorData         = Donations::where('user_id', Auth::id())->first();
+        $this->donorData = Donations::where('user_id', Auth::id())->first();
+
+        $donateId = Donations::where('user_id', Auth::id())->first();
+
+        $this->bloodDetails = BloodStockDetail::where('donation_id', $donateId->id)->first();
+
         $this->alreadyRegistered = (bool) $this->donorData;
 
         if (!$this->alreadyRegistered) {
