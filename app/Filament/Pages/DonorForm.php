@@ -38,13 +38,14 @@ class DonorForm extends Page implements HasForms
         // Cek apakah user sudah terdaftar
         $this->donorData = Donations::where('user_id', Auth::id())->first();
 
-        $donateId = Donations::where('user_id', Auth::id())->first();
-
-        $this->bloodDetails = BloodStockDetail::where('donation_id', $donateId->id)->first();
-
+        // Cek apakah data donasi ada
         $this->alreadyRegistered = (bool) $this->donorData;
 
-        if (!$this->alreadyRegistered) {
+        if ($this->alreadyRegistered) {
+            // Jika ada, ambil detail blood stock
+            $this->bloodDetails = BloodStockDetail::where('donation_id', $this->donorData->id)->first();
+        } else {
+            // Jika tidak ada, isi form kosong
             $this->form->fill();
         }
     }

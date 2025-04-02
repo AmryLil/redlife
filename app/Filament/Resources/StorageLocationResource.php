@@ -27,6 +27,14 @@ class StorageLocationResource extends Resource
                     ->label('Storage Name')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('city')
+                    ->label('City')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\Textarea::make('url_address')
+                    ->label('Url Address (Gmaps Url)')
+                    ->required()
+                    ->maxLength(500),
                 Forms\Components\Textarea::make('address')
                     ->label('Address')
                     ->required()

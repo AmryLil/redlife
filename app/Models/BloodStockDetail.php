@@ -36,4 +36,11 @@ class BloodStockDetail extends Model
     {
         return now()->greaterThan($this->expiry_date);
     }
+
+    public function scopeTotalByBloodType($query)
+    {
+        return $query
+            ->selectRaw('blood_type_id, SUM(quantity) as total_quantity')
+            ->groupBy('blood_type_id');
+    }
 }

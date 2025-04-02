@@ -19,9 +19,9 @@ class BloodStock extends Model
         return $this->belongsTo(BloodTypes::class, 'blood_type_id');
     }
 
-    public function bloodStock()
+    public function bloodStockDetail()
     {
-        return $this->belongsTo(BloodStock::class);
+        return $this->belongsTo(BloodStockDetail::class);
     }
 
     // Fungsi untuk mengecek apakah darah sudah kedaluwarsa
