@@ -53,7 +53,7 @@ class DonorMonitoringResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn(Builder $query) => $query->whereNotIn('status_id', [3, 5]))
+            ->modifyQueryUsing(fn(Builder $query) => $query->whereNotIn('status_id', [3, 7, 8]))
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('Donation ID')
@@ -104,7 +104,7 @@ class DonorMonitoringResource extends Resource
                         $record->save();
 
                         // Tambahkan redirect jika status completed
-                        if ($data['status_id'] == 5) {  // ID 2 = Completed
+                        if ($data['status_id'] == 8) {  // ID 2 = Completed
                             return redirect()->to(
                                 BloodStockResource::getUrl('create', [
                                     'donation_id' => $record->id,

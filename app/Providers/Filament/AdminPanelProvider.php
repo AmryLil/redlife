@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\BloodComponentResource;
 use App\Http\Middleware\RedirectByRole;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
@@ -9,6 +10,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Support\Colors\Color;
 use Filament\Pages;
 use Filament\Panel;
@@ -38,6 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make('Master Data'),
+                NavigationGroup::make('Blood'),
                 NavigationGroup::make('General'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

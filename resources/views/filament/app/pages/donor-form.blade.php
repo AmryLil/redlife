@@ -389,10 +389,9 @@
                                         Show Details
                                     </button>
 
-                                    <div x-show="showModal" x-transition.opacity x-transition.duration.300ms
+                                    <div x-show="showModal" x-transition.opacity
                                         class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 backdrop-blur-md">
                                         <div x-show="showModal" x-transition.scale.origin.center
-                                            x-transition.duration.300ms
                                             class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg transform transition-all relative">
                                             <button
                                                 @click="showModal = false; document.body.classList.remove('overflow-hidden')"

@@ -4,14 +4,19 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BloodStockResource\Pages;
 use App\Filament\Widgets\BloodStock as WidgetsBloodStock;
+use App\Models\BloodComponent;
 use App\Models\BloodStock;
 use App\Models\BloodStockDetail;
 use App\Models\BloodTypes;
 use App\Models\User;
+use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Components\Wizard\Step;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
@@ -23,7 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BloodStockResource extends Resource
 {
-    protected static ?string $model           = BloodStockDetail::class;
+    protected static ?string $model           = BloodStock::class;
     protected static ?string $navigationIcon  = 'healthicons-f-blood-o-p';
     protected static ?string $navigationLabel = 'Blood Stock';
 
@@ -31,96 +36,115 @@ class BloodStockResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('name')
-                    ->label('Donor Name')
-                    ->default(function ($get) {
-                        $userId = request('name');
-                        if (!$userId)
-                            return null;
-                        return User::find($userId)?->name;
-                    })
-                    ->disabled()
-                    ->visible(fn($operation) => $operation === 'create')
-                    ->dehydrated(),
-                TextInput::make('donation_id')
-                    ->default(request('donation_id'))
-                    ->visible(fn($operation) => $operation === 'create')
-                    ->label('Donation ID'),
-                DatePicker::make('collection_date')
-                    ->default(request('date'))
-                    ->visible(fn($operation) => $operation === 'create')
-                    ->label('Collection Date')
-                    ->disabled(),
-                Forms\Components\Select::make('blood_type_id')
-                    ->label('Blood Types')
-                    ->options(BloodTypes::all()->mapWithKeys(fn($bloodType) => [
-                        $bloodType->id => "{$bloodType->group}{$bloodType->rhesus}"
-                    ]))
-                    ->required()
-                    ->reactive()
-                    ->afterStateUpdated(function ($state, callable $set, $get) {
-                        if (!is_numeric($state))
-                            return;
-
-                        // Cari atau buat blood stock dengan quantity default 0
-                        $bloodStock = BloodStock::firstOrCreate(
-                            ['blood_type_id' => $state],
-                            ['total_quantity' => 0]  // Set initial ke 0
-                        );
-
-                        // Tambah quantity 1 saat memilih blood type
-                        $bloodStock->increment('total_quantity');
-
-                        $set('blood_stock_id', $bloodStock->id);
-                    })
-                    ->searchable(),
-                Forms\Components\Hidden::make('blood_stock_id')
-                    ->dehydrated()
-                    ->required(),
-                Forms\Components\Select::make('storage_location_id')
-                    ->relationship('storageLocation', 'name')
-                    ->label('Storage Location')
-                    ->required(),
-                Forms\Components\TextInput::make('quantity')
-                    ->numeric()
-                    ->label('Quantity')
-                    ->required(),
-                Forms\Components\TextInput::make('expiry_days')
-                    ->label('Expiry in Days')
-                    ->numeric()
-                    ->required()
-                    ->live()
-                    ->afterStateUpdated(function (Get $get, callable $set) {
-                        $collectionDate = $get('collection_date');
-                        $expiryDays     = $get('expiry_days');
-                        if ($collectionDate && $expiryDays) {
-                            $expiryDate = date('Y-m-d', strtotime("+$expiryDays days", strtotime($collectionDate)));
-                            $set('expiry_date', $expiryDate);
-                        }
-                    }),
-                Forms\Components\DatePicker::make('expiry_date')
-                    ->label('Expiry Date')
-                    ->disabled()  // Tidak bisa diedit oleh user
-                    ->dehydrated(),
-                Forms\Components\Select::make('blood_component')
-                    ->label('Blood Component')
-                    ->options([
-                        'whole_blood'     => 'Whole Blood',
-                        'plasma'          => 'Plasma',
-                        'platelets'       => 'Platelets',
-                        'red_blood_cells' => 'Red Blood Cells',
-                    ])
-                    ->required(),
-                Forms\Components\Select::make('status')
-                    ->label('Status')
-                    ->options([
-                        'available' => 'Available',
-                        'reserved'  => 'Reserved',
-                        'used'      => 'Used',
-                        'expired'   => 'Expired',
-                    ])
-                    ->required(),
-            ]);
+                Wizard::make([
+                    Wizard\Step::make('Donor Information')
+                        ->schema([
+                            Section::make('Donor Information')
+                                ->schema([
+                                    TextInput::make('name')
+                                        ->label('Donor Name')
+                                        ->default(fn() => User::find(request('name'))?->name)
+                                        ->disabled()
+                                        ->dehydrated()
+                                        ->visible(fn($operation) => $operation === 'create'),
+                                    TextInput::make('donation_id')
+                                        ->default(request('donation_id'))
+                                        ->visible(fn($operation) => $operation === 'create')
+                                        ->label('Donation ID'),
+                                    DatePicker::make('collection_date')
+                                        ->default(now())
+                                        ->disabled()
+                                        ->dehydrated(),
+                                    Select::make('blood_type_id')
+                                        ->label('Blood Type')
+                                        ->options(BloodTypes::all()->mapWithKeys(fn($bt) => [
+                                            $bt->id => $bt->full_type
+                                        ]))
+                                        ->required()
+                                        ->reactive()
+                                        ->searchable(),
+                                    Forms\Components\Select::make('storage_location_id')
+                                        ->relationship('storageLocation', 'name')
+                                        ->label('Storage Location')
+                                        ->required(),
+                                    TextInput::make('quantity')
+                                        ->numeric()
+                                        ->required()
+                                        ->minValue(1),
+                                    Forms\Components\TextInput::make('expiry_days')
+                                        ->label('Expiry in Days')
+                                        ->numeric()
+                                        ->required()
+                                        ->live()
+                                        ->afterStateUpdated(function (Get $get, callable $set) {
+                                            $collectionDate = $get('collection_date');
+                                            $expiryDays     = $get('expiry_days');
+                                            if ($collectionDate && $expiryDays) {
+                                                $expiryDate = date('Y-m-d', strtotime("+$expiryDays days", strtotime($collectionDate)));
+                                                $set('expiry_date', $expiryDate);
+                                            }
+                                        }),
+                                    DatePicker::make('expiry_date')
+                                        ->disabled()
+                                        ->dehydrated(),
+                                    Select::make('status')
+                                        ->options([
+                                            'available' => 'Available',
+                                            'reserved'  => 'Reserved',
+                                            'used'      => 'Used',
+                                            'expired'   => 'Expired'
+                                        ])
+                                        ->default('available')
+                                        ->required()
+                                ])
+                                ->columns(2)
+                        ])
+                        ->columnSpanFull(),
+                    // BloodStockResource.php
+                    Wizard\Step::make('Komponen Darah')
+                        ->schema([
+                            Section::make('Komponen Darah')
+                                ->schema([
+                                    Forms\Components\Repeater::make('bloodComponentStocks')  // Menyimpan ke BloodComponentStock
+                                        ->relationship('bloodComponentStocks')  // Sesuai dengan relasi di BloodStock
+                                        ->schema([
+                                            Select::make('blood_component_id')  // Pilih komponen darah
+                                                ->label('Komponen Darah')
+                                                ->options(BloodComponent::all()->pluck('name', 'id'))
+                                                ->required(),
+                                            TextInput::make('quantity')  // Jumlah darah yang disimpan
+                                                ->label('Jumlah (ml)')
+                                                ->numeric()
+                                                ->required()
+                                                ->minValue(1),
+                                        ])
+                                        ->columns(2)
+                                        ->minItems(1)  // Harus ada minimal 1 komponen darah yang dipilih
+                                ])
+                        ])
+                ])
+                    ->key('blood_stock_wizard')
+                    ->submitAction(
+                        Action::make('submit')
+                            ->label('Simpan Data')
+                            ->submit('submit')
+                            ->icon('heroicon-m-check')
+                    )
+                    ->nextAction(
+                        fn() => Action::make('next')
+                            ->label('Next')
+                            ->color('primary')
+                            ->action(fn($livewire) => $livewire->dispatch('wizard::nextStep'))
+                    )
+                    ->previousAction(
+                        fn() => Action::make('previous')
+                            ->label('Back')
+                            ->color('gray')
+                            ->submit('previous')
+                    )
+                    ->persistStepInQueryString()
+            ])
+            ->columns(1);
     }
 
     public static function table(Table $table): Table

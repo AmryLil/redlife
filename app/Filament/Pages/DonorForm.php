@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\BloodStock;
 use App\Models\BloodStockDetail;
 use App\Models\DonationLocation;
 use App\Models\Donations;
@@ -43,7 +44,7 @@ class DonorForm extends Page implements HasForms
 
         if ($this->alreadyRegistered) {
             // Jika ada, ambil detail blood stock
-            $this->bloodDetails = BloodStockDetail::where('donation_id', $this->donorData->id)->first();
+            $this->bloodDetails = BloodStock::where('donation_id', $this->donorData->id)->first();
         } else {
             // Jika tidak ada, isi form kosong
             $this->form->fill();

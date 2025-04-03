@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class BloodStock extends Model
 {
-    use HasFactory;
+    public $timestamps = false;
 
     protected $fillable = [
         'blood_type_id',
-        'total_quantity',
+        'storage_location_id',
+        'donation_id',
+        'quantity',
+        'expiry_date',
+        'status',
+        'blood_component'
     ];
 
     public function bloodType()
@@ -19,10 +23,37 @@ class BloodStock extends Model
         return $this->belongsTo(BloodTypes::class, 'blood_type_id');
     }
 
-    public function bloodStockDetail()
+    public function storageLocation()
     {
-        return $this->belongsTo(BloodStockDetail::class);
+        return $this->belongsTo(StorageLocations::class, 'storage_location_id');
     }
 
-    // Fungsi untuk mengecek apakah darah sudah kedaluwarsa
+    public function donations()
+    {
+        return $this->belongsTo(Donations::class, 'donation_id');
+    }
+
+    public function isExpired(): bool
+    {
+        return now()->greaterThan($this->expiry_date);
+    }
+
+    public function scopeTotalByBloodType($query)
+    {
+        return $query
+            ->selectRaw('blood_type_id, SUM(quantity) as total_quantity')
+            ->groupBy('blood_type_id');
+    }
+
+    public function bloodComponentStocks()
+    {
+        return $this->hasMany(BloodComponentStock::class, 'blood_stock_id');
+    }
+
+    public function bloodComponents()
+    {
+        return $this
+            ->belongsToMany(BloodComponent::class, 'blood_stock_component')
+            ->withPivot('quantity');
+    }
 }

@@ -17,10 +17,10 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-white shadow-md rounded-md w-full mb-3">
             <!-- Filter Kota -->
             <div>
-                <label class="block text-gray-700 font-medium mb-2">Pilih Kota</label>
+                <label class="block text-gray-700 font-medium mb-2">District/City</label>
                 <select wire:model.live="selectedCity"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <option value="">Pilih Kota</option>
+                    <option value="">All</option>
                     @foreach ($this->cities as $city)
                         <option value="{{ $city }}">{{ $city }}</option>
                     @endforeach
@@ -29,11 +29,11 @@
 
             <!-- Filter Lokasi -->
             <div>
-                <label class="block text-gray-700 font-medium mb-2">Pilih Lokasi</label>
+                <label class="block text-gray-700 font-medium mb-2">Storage Location</label>
                 <select wire:model.live="selectedLocationId"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-200"
                     @if (!$this->selectedCity) disabled @endif>
-                    <option value="">Semua Lokasi</option>
+                    <option value="">All</option>
                     @foreach ($this->storageLocations as $location)
                         <option value="{{ $location->id }}">{{ $location->name }}</option>
                     @endforeach
