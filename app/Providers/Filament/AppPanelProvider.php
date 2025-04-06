@@ -4,9 +4,12 @@ namespace App\Providers\Filament;
 
 use App\Filament\App\Pages\AboutUs;
 use App\Filament\App\Pages\BloodSupply;
+use App\Filament\App\Pages\Donations;
 use App\Filament\App\Pages\Home;
+use App\Filament\Pages\DonationsForm;
 use App\Filament\Pages\DonorForm;
 use App\Http\Middleware\RedirectByRole;
+use App\View\Components\CustomHeader;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -32,9 +35,14 @@ class AppPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->renderHook(
+                'panels::topbar.end',  // Posisi di akhir top bar
+                fn() => view('components.custom-header')
+            )
             ->id('app')
             ->path('app')
             ->authGuard('web')
+            // ->header(CustomHeader::class)
             ->colors([
                 'primary' => Color::Red,
             ])
@@ -43,8 +51,24 @@ class AppPanelProvider extends PanelProvider
             ->topNavigation()
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\Filament\App\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\Filament\App\Pages')
-            ->pages([
-                DonorForm::class,
+            ->pages([])
+            ->navigationItems([
+                NavigationItem::make('Home')
+                    ->url('/app')
+                    ->sort(-100),  // Angka terkecil = posisi pertama
+                NavigationItem::make('Donations')
+                    ->url('/app/donations')
+                    ->sort(-50),
+                NavigationItem::make('Blood Supply')
+                    ->url('/app/blood-supply')
+                    ->sort(-30),
+                NavigationItem::make('Event')
+                    ->url('/app/event')
+                    ->sort(-20),
+                NavigationItem::make('About Us')
+                    ->url('/app/about')
+                    ->icon('heroicon-o-information-circle')
+                    ->sort(0),
             ])
             ->userMenuItems([
                 MenuItem::make()
@@ -61,7 +85,6 @@ class AppPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
@@ -69,7 +92,6 @@ class AppPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
                 RedirectByRole::class,
             ], isPersistent: true);
     }

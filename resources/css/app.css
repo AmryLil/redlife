@@ -8,7 +8,15 @@
 }
 
 .fi-topbar > * {
-    @apply md:px-32 !important;
+    @apply md:px-32 flex justify-center items-center !important;
+}
+
+.fi-logo {
+    @apply text-2xl mr-48 text-red-700 text-center !important;
+}
+
+.fi-logo {
+    @apply text-2xl mr-48 text-red-700 text-center !important;
 }
 
 @keyframes spin {

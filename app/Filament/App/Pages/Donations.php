@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Filament\Pages;
+namespace App\Filament\App\Pages;
 
 use App\Models\BloodStock;
 use App\Models\BloodStockDetail;
 use App\Models\DonationLocation;
-use App\Models\Donations;
+use App\Models\Donations as DonationsModel;
 use App\Models\Donor;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -23,7 +23,7 @@ use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 
-class DonorForm extends Page implements HasForms
+class Donations extends Page implements HasForms
 {
     use InteractsWithForms;
 
@@ -37,7 +37,12 @@ class DonorForm extends Page implements HasForms
     public function mount(): void
     {
         // Cek apakah user sudah terdaftar
-        $this->donorData = Donations::where('user_id', Auth::id())->first();
+
+        if (!Auth::check()) {
+            redirect()->route('login');
+            return;
+        }
+        $this->donorData = DonationsModel::where('user_id', Auth::id())->first();
 
         // Cek apakah data donasi ada
         $this->alreadyRegistered = (bool) $this->donorData;
@@ -216,7 +221,7 @@ class DonorForm extends Page implements HasForms
         ]);
 
         // Simpan data
-        $donor = Donations::create([
+        $donor = DonationsModel::create([
             'user_id'       => Auth::id(),
             'donation_date' => $this->data['tanggal_donor'],
             'location_id'   => $this->data['lokasi_donor'],

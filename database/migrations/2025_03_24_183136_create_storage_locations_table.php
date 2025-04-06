@@ -13,7 +13,9 @@ return new class extends Migration {
         Schema::create('storage_locations', function (Blueprint $table) {
             $table->id();
             $table->string('name');  // Nama lokasi penyimpanan
-            $table->text('address')->nullable();
+            $table->string('city');
+            $table->text('address');
+            $table->text('url_address');
             $table->timestamps();
         });
     }

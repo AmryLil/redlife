@@ -28,7 +28,7 @@ class RequestTypesResource extends Resource
             ->schema([
                 Grid::make(1)
                     ->schema([
-                        Forms\Components\TextInput::make('type')
+                        Forms\Components\TextInput::make('name')
                             ->required()
                             ->maxLength(255),
                     ]),
@@ -39,7 +39,7 @@ class RequestTypesResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('type')
+                Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

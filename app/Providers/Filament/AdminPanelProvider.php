@@ -3,6 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\BloodComponentResource;
+use App\Filament\Resources\PermissionResource;
+use App\Filament\Resources\RoleResource;
+use App\Filament\Resources\UserResource;
 use App\Http\Middleware\RedirectByRole;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
@@ -22,6 +25,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Spatie\Permission\Middleware\PermissionMiddleware;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -33,15 +37,15 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->authGuard('web')
-            ->login()
             ->sidebarCollapsibleOnDesktop()
             ->colors([
                 'primary' => Color::Red,
             ])
             ->navigationGroups([
+                NavigationGroup::make('Blood Management '),
+                NavigationGroup::make('Donor Management'),
+                NavigationGroup::make('Organization'),
                 NavigationGroup::make('Master Data'),
-                NavigationGroup::make('Blood'),
-                NavigationGroup::make('General'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
@@ -67,6 +71,9 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 RedirectByRole::class,
-            ], isPersistent: true);
+            ], isPersistent: true)
+            ->plugins([
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+            ]);
     }
 }

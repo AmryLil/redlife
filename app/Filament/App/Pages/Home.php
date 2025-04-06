@@ -7,5 +7,6 @@ use Illuminate\Contracts\View\View;
 
 class Home extends Page
 {
-    protected static string $view = 'filament.app.pages.home';
+    protected static string $view      = 'filament.app.pages.home';
+    protected static string $routePath = '/';
 }

@@ -8,10 +8,20 @@ class BloodRequest extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'blood_type', 'rhesus', 'quantity', 'status'];
+    protected $fillable = ['hospital_id', 'blood_type_id', 'desc', 'quantity', 'status_id'];
 
-    public function user()
+    public function hospital()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Hospital::class);
+    }
+
+    public function bloodType()
+    {
+        return $this->belongsTo(BloodTypes::class);
+    }
+
+    public function requestStatus()
+    {
+        return $this->belongsTo(BloodRequestType::class);
     }
 }

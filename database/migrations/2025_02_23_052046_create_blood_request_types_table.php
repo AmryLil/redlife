@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('blood_request_types', function (Blueprint $table) {
             $table->id();
-            $table->string('type');
+            $table->string('name');
             $table->timestamps();
         });
     }

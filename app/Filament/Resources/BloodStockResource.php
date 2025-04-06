@@ -30,6 +30,7 @@ class BloodStockResource extends Resource
 {
     protected static ?string $model           = BloodStock::class;
     protected static ?string $navigationIcon  = 'healthicons-f-blood-o-p';
+    protected static ?string $navigationGroup = 'Blood Management';
     protected static ?string $navigationLabel = 'Blood Stock';
 
     public static function form(Form $form): Form

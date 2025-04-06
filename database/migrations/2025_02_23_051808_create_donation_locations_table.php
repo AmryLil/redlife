@@ -11,8 +11,9 @@ return new class extends Migration {
             $table->id();
             $table->string('location_name');
             $table->string('location_detail');
+            $table->string('city');
             $table->text('address');
-            $table->string('url_address');
+            $table->text('url_address');
             $table->string('cover');
             $table->timestamps();
         });

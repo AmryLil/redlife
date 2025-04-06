@@ -5,15 +5,18 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    public function up()
+    public function up(): void
     {
         Schema::create('blood_requests', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('blood_type');
-            $table->string('rhesus');
+
+            $table->foreignId('hospital_id')->constrained('hospitals')->onDelete('cascade');
+            $table->foreignId('blood_type_id')->constrained('blood_types')->onDelete('cascade');
+            $table->text('desc')->nullable();
             $table->integer('quantity');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+
+            $table->foreignId('status_id')->constrained('blood_request_types')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

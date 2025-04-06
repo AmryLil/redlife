@@ -16,8 +16,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class SchedulesResource extends Resource
 {
-    protected static ?string $model          = DonationSchedule::class;
-    protected static ?string $navigationIcon = 'heroicon-o-calendar-date-range';
+    protected static ?string $model           = DonationSchedule::class;
+    protected static ?string $navigationGroup = 'Donor Management';
+    protected static ?string $navigationIcon  = 'heroicon-o-calendar-date-range';
 
     public static function form(Form $form): Form
     {

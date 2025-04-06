@@ -15,8 +15,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BloodComponentResource extends Resource
 {
-    protected static ?string $model          = BloodComponent::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $model           = BloodComponent::class;
+    protected static ?string $navigationGroup = 'Master Data';
+    protected static ?string $navigationIcon  = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {

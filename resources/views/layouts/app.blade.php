@@ -21,7 +21,7 @@
 
 <body>
     @livewire('navbar')
-    <div class="px-44 mb-60">
+    <div class=" mb-60">
         {{ $slot }}
     </div>
 </body>
