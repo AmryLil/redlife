@@ -42,7 +42,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Red,
             ])
             ->navigationGroups([
-                NavigationGroup::make('Blood Management '),
+                NavigationGroup::make('Blood Management'),
                 NavigationGroup::make('Donor Management'),
                 NavigationGroup::make('Organization'),
                 NavigationGroup::make('Master Data'),

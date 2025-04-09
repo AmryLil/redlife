@@ -12,7 +12,8 @@
                 <button>Login</button>
             </a>
             <a href="/login" class="fi-btn">
-                <button class="bg-red-600 font-semibold rounded-md shadow-sm text-slate-50 px-5 py-1.5">Register</button>
+                <button
+                    class="gradient-custom font-semibold rounded-md shadow-sm text-slate-50 px-5 py-1.5">Register</button>
             </a>
         </div>
     @endif

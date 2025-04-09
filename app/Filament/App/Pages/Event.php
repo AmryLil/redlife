@@ -6,7 +6,7 @@ use Filament\Pages\Page;
 
 class Event extends Page
 {
-    protected static string $view = 'filament.app.pages.event';
+    protected static string $view = 'filament.app.pages.coming-soon';
     public array $events          = [];
 
     public function mount()

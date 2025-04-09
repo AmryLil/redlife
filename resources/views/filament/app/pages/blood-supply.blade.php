@@ -7,7 +7,7 @@
         }
     </style>
     <x-waves></x-waves>
-    <h1 class="absolute top-32 font-boldonse left-64 font-bold text-slate-50 text-4xl">Blood Supply</h1>
+    <h1 class="absolute top-40 font-boldonse left-32 font-bold text-slate-50 text-4xl uppercase ">Blood Supply</h1>
 
     <div class=" mt-10 flex justify-center w-screen items-center px-28 -translate-y-10 flex-col">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-white shadow-md rounded-md w-full mb-3">
@@ -61,5 +61,6 @@
         </div>
     </div>
 
+    <x-footer></x-footer>
 
 </div>

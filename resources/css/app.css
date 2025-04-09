@@ -19,6 +19,12 @@
     @apply text-2xl mr-48 text-red-700 text-center !important;
 }
 
+.gradient-custom {
+    @apply bg-gradient-to-r from-[rgba(179,35,70,1)] to-[rgba(106,11,55,1)];
+}
+
+/* Fallback untuk browser lama */
+
 @keyframes spin {
     to {
         transform: rotate(360deg);

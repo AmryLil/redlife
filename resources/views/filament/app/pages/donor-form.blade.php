@@ -11,7 +11,7 @@
 
         {{-- Hero Section --}}
         <x-waves></x-waves>
-        <h1 class="absolute top-32 font-boldonse left-64 font-bold text-slate-50 text-4xl">Donations</h1>
+        <h1 class="absolute top-40 font-boldonse left-32 font-bold text-slate-50 text-4xl uppercase">Donations</h1>
 
         {{-- Form Section --}}
         <div class="w-screen md:px-36 ">
@@ -462,4 +462,6 @@
             @endif
         </div>
     </div>
+    <x-footer></x-footer>
+
 </div>
