@@ -17,6 +17,7 @@ export default {
         "./resources/views/filament/**/*.blade.php",
         "./vendor/filament/**/*.blade.php",
         "./vendor/danharrin/filament-blog/resources/views/**/*.blade.php",
+        "./vendor/bezhansalleh/**/*.blade.php",
     ],
 
     theme: {
