@@ -14,6 +14,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\View;
 use Filament\Forms\Components\Wizard;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -21,6 +22,8 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\HtmlString;
 
 class Donations extends Page implements HasForms
@@ -33,27 +36,155 @@ class Donations extends Page implements HasForms
     public bool $alreadyRegistered = false;
     public $donorData;
     public $bloodDetails;
+    public array $donationLocations   = [];
+    public string $userLocationCoords = '';
+    public bool $locationDataLoaded   = false;
+
+    // FIX 1: Tambahkan computed property untuk options
+    public function getDonationLocationOptionsProperty()
+    {
+        $locations = $this->getLocationData();
+
+        if (empty($locations)) {
+            return [];
+        }
+
+        $options = [];
+        foreach ($locations as $location) {
+            if (isset($location['place_id']) && isset($location['display_name'])) {
+                $distance                       = isset($location['distance'])
+                    ? ' (' . number_format($location['distance'], 2) . ' km)'
+                    : '';
+                $options[$location['place_id']] = $location['display_name'] . $distance;
+            }
+        }
+
+        return $options;
+    }
+
+    // FIX 2: Method helper untuk mendapatkan data lokasi
+    protected function getLocationData(): array
+    {
+        // Prioritas: property class -> session -> empty array
+        if (!empty($this->donationLocations)) {
+            return $this->donationLocations;
+        }
+
+        $sessionLocations = Session::get('donation_locations', []);
+        if (!empty($sessionLocations)) {
+            $this->donationLocations  = $sessionLocations;
+            $this->locationDataLoaded = Session::get('location_data_loaded', false);
+            return $this->donationLocations;
+        }
+
+        return [];
+    }
+
+    public function handleLokasiUpdate(...$args)
+    {
+        Log::info('Event diterima', [
+            'args'       => $args,
+            'args_count' => count($args)
+        ]);
+
+        if (count($args) >= 2) {
+            $userCoords = $args[0] ?? '';
+            $locations  = $args[1] ?? [];
+
+            if (!empty($userCoords)) {
+                $this->userLocationCoords      = $userCoords;
+                $this->data['lokasi_pengguna'] = $userCoords;
+                Session::put('user_location_coords', $userCoords);
+            }
+
+            if (is_array($locations) && !empty($locations)) {
+                $this->donationLocations  = $locations;
+                $this->locationDataLoaded = true;
+                Session::put('donation_locations', $locations);
+                Session::put('location_data_loaded', true);
+
+                Log::info('Locations updated', [
+                    'count'          => count($this->donationLocations),
+                    'first_location' => $this->donationLocations[0] ?? null
+                ]);
+            }
+        } else {
+            // Fallback ke struktur lama
+            $eventData = $args[0] ?? [];
+            if (is_array($eventData) && isset($eventData[0])) {
+                $eventData = $eventData[0];
+            }
+
+            if (isset($eventData['locations']) && is_array($eventData['locations'])) {
+                $this->donationLocations  = $eventData['locations'];
+                $this->locationDataLoaded = true;
+                Session::put('donation_locations', $eventData['locations']);
+                Session::put('location_data_loaded', true);
+            }
+
+            if (isset($eventData['lokasi_pengguna'])) {
+                $this->userLocationCoords      = $eventData['lokasi_pengguna'];
+                $this->data['lokasi_pengguna'] = $eventData['lokasi_pengguna'];
+                Session::put('user_location_coords', $eventData['lokasi_pengguna']);
+            }
+        }
+
+        // FIX 3: Force refresh form dengan re-render select
+        $this->resetValidation();
+        unset($this->data['lokasi_donor_id']);
+
+        // Dispatch event untuk refresh component
+        $this->dispatch('$refresh');
+    }
 
     public function mount(): void
     {
-        // Cek apakah user sudah terdaftar
-
         if (!Auth::check()) {
             redirect()->route('login');
             return;
         }
-        $this->donorData = DonationsModel::where('user_id', Auth::id())->first();
 
-        // Cek apakah data donasi ada
+        $this->loadLocationDataFromSession();
+        $this->donorData         = DonationsModel::where('user_id', Auth::id())->first();
         $this->alreadyRegistered = (bool) $this->donorData;
 
         if ($this->alreadyRegistered) {
-            // Jika ada, ambil detail blood stock
             $this->bloodDetails = BloodStock::where('donation_id', $this->donorData->id)->first();
         } else {
-            // Jika tidak ada, isi form kosong
             $this->form->fill();
         }
+    }
+
+    protected function loadLocationDataFromSession(): void
+    {
+        if (Session::has('donation_locations')) {
+            $this->donationLocations  = Session::get('donation_locations', []);
+            $this->locationDataLoaded = Session::get('location_data_loaded', false);
+            $this->userLocationCoords = Session::get('user_location_coords', '');
+
+            if (!empty($this->userLocationCoords)) {
+                $this->data['lokasi_pengguna'] = $this->userLocationCoords;
+            }
+
+            Log::info('Loaded location data from session', [
+                'locations_count'    => count($this->donationLocations),
+                'locationDataLoaded' => $this->locationDataLoaded,
+                'userLocationCoords' => $this->userLocationCoords
+            ]);
+        }
+    }
+
+    // FIX 4: Pastikan hydrate berjalan dengan benar
+    public function hydrate(): void
+    {
+        $this->loadLocationDataFromSession();
+    }
+
+    protected function getListeners()
+    {
+        return [
+            'lokasiDiupdate' => 'handleLokasiUpdate',
+        ];
     }
 
     public function form(Form $form): Form
@@ -116,23 +247,49 @@ class Donations extends Page implements HasForms
                                     DatePicker::make('tanggal_donor')
                                         ->label('Tanggal Donor')
                                         ->minDate(now()->addDay())
-                                        ->required()
-                                        ->reactive(),
-                                    Select::make('lokasi_pengguna')
-                                        ->label('Pilih Kota atau Wilayah')
-                                        ->options(DonationLocation::all()->pluck('city', 'city')->unique())
-                                        ->required()
-                                        ->reactive(),
-                                    Select::make('lokasi_donor')
-                                        ->label('Tempat Donor Darah Terdekat')
-                                        ->options(function (callable $get) {
-                                            $kota = $get('lokasi_pengguna');
-                                            return DonationLocation::where('city', $kota)
-                                                ->pluck('location_name', 'id');
+                                        ->required(),
+                                    TextInput::make('lokasi_pengguna')
+                                        ->label('Lokasi Anda')
+                                        ->extraAttributes([
+                                            'id' => 'lokasi_pengguna',
+                                        ])
+                                        ->disabled()
+                                        ->default(function () {
+                                            return $this->userLocationCoords ?: Session::get('user_location_coords', '');
+                                        }),
+                                    // FIX 5: Perbaiki Select component
+                                    Select::make('lokasi_donor_id')
+                                        ->label('Tempat Donor')
+                                        ->placeholder(function () {
+                                            $locations = $this->getLocationData();
+                                            return !empty($locations) ? 'Pilih tempat donor' : 'Klik "Ambil Lokasi" terlebih dahulu';
                                         })
+                                        ->options(function () {
+                                            return $this->donationLocationOptions;
+                                        })
+                                        ->searchable()
                                         ->required()
-                                        ->reactive(),
+                                        // FIX 6: Hapus reactive dan live yang conflict
+                                        ->afterStateUpdated(function ($state) {
+                                            if ($state) {
+                                                $this->updatedDataLokasiDonorId($state);
+                                            }
+                                        })
+                                        ->helperText(function () {
+                                            $locations = $this->getLocationData();
+                                            $count     = count($locations);
+                                            return !empty($locations)
+                                                ? "Pilih lokasi donor yang diinginkan ({$count} lokasi tersedia)"
+                                                : 'Klik "Ambil Lokasi" terlebih dahulu untuk melihat pilihan tempat donor';
+                                        }),
+                                    TextInput::make('selected_location_data')
+                                        ->extraAttributes([
+                                            'id' => 'selected_location_data',
+                                        ])
+                                        ->hidden(),
+                                    View::make('components.peta-leaflet'),
                                     Select::make('waktu_donor')
+                                        ->label('Waktu Donor')
                                         ->options([
                                             '08:00' => '08:00 - 09:00',
                                             '09:00' => '09:00 - 10:00',
@@ -163,8 +320,12 @@ class Donations extends Page implements HasForms
                                         ->disabled()
                                         ->dehydrated()
                                         ->default(function ($get) {
-                                            $location = DonationLocation::find($get('lokasi_donor'));
-                                            return $location ? "{$location->nama_lokasi} - {$location->alamat}" : '';
+                                            $selectedData = $get('selected_location_data');
+                                            if ($selectedData) {
+                                                $locationData = json_decode($selectedData, true);
+                                                return $locationData['display_name'] ?? 'Lokasi tidak diketahui';
+                                            }
+                                            return 'Lokasi belum dipilih';
                                         }),
                                     TextInput::make('waktu_donor')
                                         ->label('Waktu Donor')
@@ -180,12 +341,43 @@ class Donations extends Page implements HasForms
             ->statePath('data');
     }
 
+    public function updatedDataLokasiDonorId($value)
+    {
+        if ($value) {
+            $locations        = $this->getLocationData();
+            $selectedLocation = collect($locations)->firstWhere('place_id', $value);
+
+            if ($selectedLocation) {
+                $this->data['selected_location_data'] = json_encode($selectedLocation);
+
+                Log::info('Lokasi dipilih', [
+                    'place_id' => $value,
+                    'location' => $selectedLocation['display_name'] ?? 'unknown'
+                ]);
+            }
+        }
+    }
+
+    // FIX 7: Method untuk debug dan refresh manual
+    public function refreshLocations()
+    {
+        $this->loadLocationDataFromSession();
+
+        Notification::make()
+            ->title('Lokasi di-refresh')
+            ->body('Locations count: ' . count($this->donationLocations))
+            ->info()
+            ->send();
+
+        // Force refresh form
+        $this->dispatch('$refresh');
+    }
+
     public function nextStep()
     {
         if ($this->alreadyRegistered)
             return;
 
-        // Validasi step 1
         if ($this->currentStep === 1) {
             $this->validate([
                 'data.nama_lengkap' => 'required|string|max:255',
@@ -195,17 +387,23 @@ class Donations extends Page implements HasForms
             ]);
         }
 
-        // Validasi step 2
         if ($this->currentStep === 2) {
             $this->validate([
-                'data.tanggal_donor' => 'required|date|after:today',
-                'data.lokasi_donor'  => 'required|exists:donation_locations,id',
-                'data.waktu_donor'   => 'required',
+                'data.tanggal_donor'   => 'required|date|after:today',
+                'data.lokasi_donor_id' => 'required',
+                'data.waktu_donor'     => 'required',
             ]);
         }
 
         if ($this->currentStep < 3) {
             $this->currentStep++;
+        }
+    }
+
+    public function previousStep()
+    {
+        if ($this->currentStep > 1) {
+            $this->currentStep--;
         }
     }
 
@@ -215,24 +413,35 @@ class Donations extends Page implements HasForms
             return;
 
         $this->validate([
-            'data.tanggal_donor' => 'required|date|after:today',
-            'data.lokasi_donor'  => 'required|exists:donation_locations,id',
-            'data.waktu_donor'   => 'required',
+            'data.tanggal_donor'   => 'required|date|after:today',
+            'data.lokasi_donor_id' => 'required',
+            'data.waktu_donor'     => 'required',
         ]);
 
-        // Simpan data
+        $selectedLocationData = json_decode($this->data['selected_location_data'] ?? '{}', true);
+
+        $donationLocation = DonationLocation::firstOrCreate([
+            'place_id' => $this->data['lokasi_donor_id']
+        ], [
+            'nama_lokasi' => $selectedLocationData['display_name'] ?? 'PMI',
+            'alamat'      => $selectedLocationData['display_name'] ?? '',
+            'latitude'    => $selectedLocationData['lat'] ?? null,
+            'longitude'   => $selectedLocationData['lon'] ?? null,
+        ]);
+
         $donor = DonationsModel::create([
             'user_id'       => Auth::id(),
             'donation_date' => $this->data['tanggal_donor'],
-            'location_id'   => $this->data['lokasi_donor'],
+            'location_id'   => $donationLocation->id,
             'time'          => $this->data['waktu_donor'],
             'status_id'     => 1,
         ]);
 
-        // Update data dan status
         $this->donorData         = $donor;
         $this->alreadyRegistered = true;
         $this->form->fill();
+
+        Session::forget(['donation_locations', 'location_data_loaded', 'user_location_coords']);
 
         Notification::make()
             ->title('Pendaftaran Berhasil!')
@@ -245,7 +454,7 @@ class Donations extends Page implements HasForms
         if ($this->alreadyRegistered)
             return [];
 
-        return [
+        $actions = [
             Action::make('previous')
                 ->label('Kembali')
                 ->visible($this->currentStep > 1)
@@ -259,5 +468,15 @@ class Donations extends Page implements HasForms
                 ->visible($this->currentStep === 3)
                 ->action('submit'),
         ];
+
+        // FIX 8: Tambahkan tombol debug (hapus di production)
+        if (app()->environment('local')) {
+            $actions[] = Action::make('debug_refresh')
+                ->label('Refresh Lokasi (Debug)')
+                ->color('warning')
+                ->action('refreshLocations');
+        }
+
+        return $actions;
     }
 }

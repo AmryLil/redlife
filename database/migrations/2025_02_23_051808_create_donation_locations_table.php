@@ -13,6 +13,8 @@ return new class extends Migration {
             $table->string('location_detail');
             $table->string('city');
             $table->text('address');
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
             $table->text('url_address');
             $table->string('cover');
             $table->timestamps();

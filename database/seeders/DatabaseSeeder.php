@@ -15,8 +15,8 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // BloodStockTableSeeder::class;
-        PermissionSeeder::class;
-        RoleSeeder::class;
+        DonationLocationSeeder::class;
+        // PermissionSeeder::class;
+        // RoleSeeder::class;
     }
 }
