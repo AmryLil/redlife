@@ -4,9 +4,10 @@
     // Global variables
     let map,
         userMarker = null,
-        pmiMarkers = [];
+        pmiMarkers = [],
+        selectedMarker = null;
     let isMapReady = false;
-    let donationLocations = []; // Array untuk menyimpan data lokasi
+    let availableLocations = []; // Store available PMI locations
 
     // Utility functions
     function getElement(id) {
@@ -17,6 +18,8 @@
         const el = getElement(id);
         if (el) {
             el.value = value;
+            // Trigger change event untuk Livewire
+            el.dispatchEvent(new Event("change"));
             return true;
         }
         console.warn(`Element ${id} not found`);
@@ -90,6 +93,181 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
+    // Extract location name from display_name
+    function extractLocationName(displayName) {
+        // Try to extract meaningful location name
+        const parts = displayName.split(",");
+        if (parts.length >= 2) {
+            // Return first two parts for more context
+            return parts.slice(0, 2).join(", ").trim();
+        }
+        return displayName.length > 50
+            ? displayName.substring(0, 50) + "..."
+            : displayName;
+    }
+
+    // Populate location selector dropdown
+    function populateLocationSelector(locations) {
+        const selector = getElement("selectedLocation");
+        const selectorContainer = getElement("locationSelector");
+
+        if (!selector || !selectorContainer) {
+            console.error("Location selector elements not found");
+            return;
+        }
+
+        // Clear existing options
+        selector.innerHTML =
+            '<option value="">-- Pilih Lokasi Donor --</option>';
+
+        // Add locations to dropdown with type icons
+        locations.forEach((location, index) => {
+            const option = document.createElement("option");
+            option.value = index;
+            option.textContent = `${location.icon} ${location.type} - ${extractLocationName(location.display_name)} (${location.distance.toFixed(2)} km)`;
+            selector.appendChild(option);
+        });
+
+        // Show selector
+        selectorContainer.style.display = "block";
+
+        // Add change event listener
+        selector.onchange = function () {
+            handleLocationSelection(this.value);
+        };
+    }
+
+    // Handle location selection
+    function handleLocationSelection(selectedIndex) {
+        const selectedLocationInfo = getElement("selectedLocationInfo");
+        const locationDetails = getElement("locationDetails");
+
+        if (selectedIndex === "" || selectedIndex === null) {
+            // Hide info and remove selected marker
+            if (selectedLocationInfo)
+                selectedLocationInfo.style.display = "none";
+            if (selectedMarker && map.hasLayer(selectedMarker)) {
+                map.removeLayer(selectedMarker);
+                selectedMarker = null;
+            }
+            return;
+        }
+
+        const location = availableLocations[parseInt(selectedIndex)];
+        if (!location) {
+            console.error("Selected location not found");
+            return;
+        }
+
+        // Remove previous selected marker
+        if (selectedMarker && map.hasLayer(selectedMarker)) {
+            map.removeLayer(selectedMarker);
+        }
+
+        // Add new selected marker with different icon
+        selectedMarker = L.marker([location.lat, location.lon], {
+            // Create custom selected icon
+            icon: L.divIcon({
+                html: '<div style="background-color: #ef4444; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                className: "selected-marker",
+                iconSize: [25, 25],
+                iconAnchor: [12, 12],
+            }),
+        }).addTo(map);
+
+        selectedMarker
+            .bindPopup(
+                `
+                <strong>🎯 Lokasi Donor Terpilih</strong><br>
+                <strong>${location.icon} ${location.type}</strong><br>
+                <small>${extractLocationName(location.display_name)}</small><br>
+                <small>Jarak: ${location.distance.toFixed(2)} km</small>
+            `,
+            )
+            .openPopup();
+
+        // Center map on selected location
+        map.setView([location.lat, location.lon], 15);
+
+        // Show location info
+        if (selectedLocationInfo && locationDetails) {
+            locationDetails.innerHTML = `
+                    <div style="margin-bottom: 8px;"><strong>Jenis:</strong> ${location.icon} ${location.type}</div>
+                    <div style="margin-bottom: 6px;"><strong>Nama:</strong> ${extractLocationName(location.display_name)}</div>
+                    <div style="margin-bottom: 6px;"><strong>Alamat:</strong> ${location.display_name}</div>
+                    <div><strong>Jarak:</strong> ${location.distance.toFixed(2)} km dari lokasi Anda</div>
+                `;
+            selectedLocationInfo.style.display = "block";
+        }
+
+        // Send selected location data to Livewire
+        const locationData = {
+            lokasi_pengguna: getElement("lokasi_pengguna")
+                ? getElement("lokasi_pengguna").value
+                : "",
+            lokasi_donor_terpilih: {
+                jenis: location.type,
+                nama: extractLocationName(location.display_name),
+                alamat: location.display_name,
+                koordinat: `${location.lat.toFixed(6)}, ${location.lon.toFixed(6)}`,
+                jarak: location.distance.toFixed(2),
+                place_id: location.place_id,
+                icon: location.icon,
+            },
+        };
+
+        // Send to Livewire
+        try {
+            let eventSent = false;
+
+            // Method 1: Livewire v3 style
+            if (window.Livewire && typeof Livewire.dispatch === "function") {
+                Livewire.dispatch("lokasiDonorDipilih", locationData);
+                console.log(
+                    "✓ Selected location sent via Livewire.dispatch (v3)",
+                );
+                eventSent = true;
+            }
+
+            // Method 2: Livewire v2 style
+            if (
+                !eventSent &&
+                window.livewire &&
+                typeof window.livewire.emit === "function"
+            ) {
+                window.livewire.emit("lokasiDonorDipilih", locationData);
+                console.log("✓ Selected location sent via livewire.emit (v2)");
+                eventSent = true;
+            }
+
+            // Method 3: Fallback Livewire v2/v3
+            if (
+                !eventSent &&
+                window.Livewire &&
+                typeof Livewire.emit === "function"
+            ) {
+                Livewire.emit("lokasiDonorDipilih", locationData);
+                console.log(
+                    "✓ Selected location sent via Livewire.emit (fallback)",
+                );
+                eventSent = true;
+            }
+
+            if (!eventSent) {
+                console.warn(
+                    "No Livewire dispatch method available for selected location",
+                );
+            }
+        } catch (error) {
+            console.error(
+                "Error sending selected location to Livewire:",
+                error,
+            );
+        }
+
+        console.log("Location selected:", locationData);
+    }
+
     // Set user location
     function setUserLocation(lat, lon) {
         if (!isMapReady) {
@@ -110,13 +288,13 @@
             // Center map
             map.setView([lat, lon], 13);
 
-            // Update form
+            // Update form - kirim koordinat ke input lokasi_pengguna
             setElementValue(
                 "lokasi_pengguna",
                 `${lat.toFixed(6)}, ${lon.toFixed(6)}`,
             );
 
-            // Find PMI
+            // Find donor locations
             findPMI(lat, lon);
         } catch (error) {
             console.error("Set location error:", error);
@@ -124,123 +302,247 @@
         }
     }
 
-    // Update Livewire component with location data
-    function updateLivewireComponent(userLocation, locations) {
-        try {
-            // Dispatch event ke Livewire component
-            if (typeof Livewire !== "undefined") {
-                Livewire.dispatch("lokasiDiupdate", {
-                    lokasi_pengguna: userLocation,
-                    locations: locations,
-                });
-            } else if (typeof window.livewire !== "undefined") {
-                // Fallback untuk Livewire v2
-                window.livewire.emit("lokasiDiupdate", {
-                    lokasi_pengguna: userLocation,
-                    locations: locations,
-                });
-            } else {
-                console.warn("Livewire tidak tersedia");
-            }
-        } catch (error) {
-            console.error("Error updating Livewire:", error);
+    // Determine location type and icon
+    function getLocationType(displayName) {
+        const name = displayName.toLowerCase();
+        if (name.includes("pmi") || name.includes("palang merah")) {
+            return { type: "PMI", icon: "🏥", color: "#dc2626" };
+        } else if (
+            name.includes("utd") ||
+            name.includes("unit transfusi darah")
+        ) {
+            return { type: "UTD", icon: "🩸", color: "#7c2d12" };
+        } else if (
+            name.includes("rumah sakit") ||
+            name.includes("rs ") ||
+            name.includes("hospital")
+        ) {
+            return { type: "RS", icon: "🏨", color: "#059669" };
+        } else if (name.includes("klinik")) {
+            return { type: "Klinik", icon: "🏥", color: "#0891b2" };
         }
+        return { type: "Kesehatan", icon: "⚕️", color: "#6366f1" };
     }
 
-    // Find PMI locations
+    // Find donor locations (PMI, UTD, RS)
     function findPMI(userLat, userLon) {
-        showStatus("Mencari lokasi PMI...", "loading");
+        showStatus("Mencari lokasi donor darah...", "loading");
 
-        // Clear old PMI markers
+        // Clear old markers
         pmiMarkers.forEach((marker) => {
             if (map.hasLayer(marker)) {
                 map.removeLayer(marker);
             }
         });
         pmiMarkers = [];
-        donationLocations = []; // Reset locations array
 
-        // Simple search URL without problematic parameters
-        const searchUrl = `https://nominatim.openstreetmap.org/search?q=PMI+Makassar&format=json&limit=10&countrycodes=id`;
+        // Hide location selector while searching
+        const selectorContainer = getElement("locationSelector");
+        const selectedLocationInfo = getElement("selectedLocationInfo");
+        if (selectorContainer) selectorContainer.style.display = "none";
+        if (selectedLocationInfo) selectedLocationInfo.style.display = "none";
 
-        fetch(searchUrl)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return response.json();
-            })
-            .then((data) => {
-                console.log("Search results:", data);
+        // Define search queries for different types of donor locations
+        const searchQueries = [
+            "PMI+Makassar",
+            "UTD+Makassar",
+            "Unit+Transfusi+Darah+Makassar",
+            "Rumah+Sakit+Makassar",
+            "RS+Makassar",
+            "Palang+Merah+Indonesia+Makassar",
+        ];
 
-                if (!Array.isArray(data) || data.length === 0) {
-                    showStatus("Tidak ditemukan lokasi PMI", "error");
+        // Search all types concurrently
+        const searchPromises = searchQueries.map((query) => {
+            const searchUrl = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=5&countrycodes=id`;
+            return fetch(searchUrl)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .catch((error) => {
+                    console.warn(`Search failed for query: ${query}`, error);
+                    return []; // Return empty array on error
+                });
+        });
+
+        Promise.all(searchPromises)
+            .then((searchResults) => {
+                console.log("All search results:", searchResults);
+
+                // Combine and deduplicate results
+                const allResults = [];
+                const seenPlaceIds = new Set();
+
+                searchResults.forEach((results) => {
+                    if (Array.isArray(results)) {
+                        results.forEach((item) => {
+                            // Skip if no coordinates or already seen
+                            if (
+                                !item.lat ||
+                                !item.lon ||
+                                seenPlaceIds.has(item.place_id)
+                            ) {
+                                return;
+                            }
+
+                            seenPlaceIds.add(item.place_id);
+                            allResults.push(item);
+                        });
+                    }
+                });
+
+                if (allResults.length === 0) {
+                    showStatus("Tidak ditemukan lokasi donor darah", "error");
                     return;
                 }
 
-                // Process results
-                const results = data
-                    .filter((item) => item.lat && item.lon)
-                    .map((item) => ({
-                        ...item,
-                        distance: calculateDistance(
-                            userLat,
-                            userLon,
-                            parseFloat(item.lat),
-                            parseFloat(item.lon),
-                        ),
-                    }))
-                    .sort((a, b) => a.distance - b.distance);
+                // Process and enhance results
+                const processedResults = allResults
+                    .map((item) => {
+                        const locationType = getLocationType(item.display_name);
+                        return {
+                            place_id: String(item.place_id),
+                            display_name: String(item.display_name),
+                            lat: parseFloat(item.lat),
+                            lon: parseFloat(item.lon),
+                            distance: calculateDistance(
+                                userLat,
+                                userLon,
+                                parseFloat(item.lat),
+                                parseFloat(item.lon),
+                            ),
+                            type: locationType.type,
+                            icon: locationType.icon,
+                            color: locationType.color,
+                        };
+                    })
+                    .sort((a, b) => a.distance - b.distance) // Sort by distance
+                    .slice(0, 15); // Limit to 15 closest results
 
-                if (results.length === 0) {
-                    showStatus("Tidak ada lokasi PMI yang valid", "error");
+                if (processedResults.length === 0) {
+                    showStatus(
+                        "Tidak ada lokasi donor darah yang valid",
+                        "error",
+                    );
                     return;
                 }
 
-                // Store locations for select options
-                donationLocations = results.map((location) => ({
-                    place_id: location.place_id,
-                    display_name: location.display_name,
-                    lat: location.lat,
-                    lon: location.lon,
-                    distance: location.distance,
-                }));
+                // Store available locations
+                availableLocations = processedResults;
 
-                // Add markers for all results
-                results.forEach((location, index) => {
+                // Add markers for results with different colors
+                processedResults.forEach((location, index) => {
                     try {
-                        const marker = L.marker([
-                            parseFloat(location.lat),
-                            parseFloat(location.lon),
-                        ]).addTo(map);
+                        // Create custom colored marker
+                        const marker = L.marker([location.lat, location.lon], {
+                            icon: L.divIcon({
+                                html: `<div style="background-color: ${location.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px;">${location.icon}</div>`,
+                                className: "custom-marker",
+                                iconSize: [20, 20],
+                                iconAnchor: [10, 10],
+                            }),
+                        }).addTo(map);
 
-                        const popupContent = `
-                                <div style="min-width: 200px;">
-                                    <strong>${index === 0 ? "🏥 Terdekat: " : "🏥 "}PMI</strong><br>
-                                    <small style="display: block; margin: 5px 0;">${location.display_name}</small>
-                                    <small style="color: #666;">Jarak: ${location.distance.toFixed(2)} km</small>
-                                </div>
-                            `;
-
-                        marker.bindPopup(popupContent);
+                        marker.bindPopup(`
+                                <strong>${location.icon} ${location.type}${index === 0 ? " (Terdekat)" : ""}</strong><br>
+                                <small>${extractLocationName(location.display_name)}</small><br>
+                                <small>Jarak: ${location.distance.toFixed(2)} km</small>
+                            `);
                         pmiMarkers.push(marker);
                     } catch (error) {
                         console.error("Marker error:", error);
                     }
                 });
 
-                // Update Livewire component with location data
-                const userLocation = `${userLat.toFixed(6)}, ${userLon.toFixed(6)}`;
-                updateLivewireComponent(userLocation, donationLocations);
+                // Populate location selector
+                populateLocationSelector(processedResults);
+
+                // Send data to Livewire
+                const locationData = {
+                    lokasi_pengguna: `${userLat.toFixed(6)}, ${userLon.toFixed(6)}`,
+                    locations: processedResults,
+                };
+
+                console.log("Sending location data to Livewire:", locationData);
+
+                // Dispatch event ke Livewire
+                try {
+                    let eventSent = false;
+
+                    // Method 1: Livewire v3 style
+                    if (
+                        window.Livewire &&
+                        typeof Livewire.dispatch === "function"
+                    ) {
+                        Livewire.dispatch("lokasiDiupdate", locationData);
+                        console.log("✓ Data sent via Livewire.dispatch (v3)");
+                        eventSent = true;
+                    }
+
+                    // Method 2: Livewire v2 style
+                    if (
+                        !eventSent &&
+                        window.livewire &&
+                        typeof window.livewire.emit === "function"
+                    ) {
+                        window.livewire.emit("lokasiDiupdate", locationData);
+                        console.log("✓ Data sent via livewire.emit (v2)");
+                        eventSent = true;
+                    }
+
+                    // Method 3: Fallback Livewire v2/v3
+                    if (
+                        !eventSent &&
+                        window.Livewire &&
+                        typeof Livewire.emit === "function"
+                    ) {
+                        Livewire.emit("lokasiDiupdate", locationData);
+                        console.log("✓ Data sent via Livewire.emit (fallback)");
+                        eventSent = true;
+                    }
+
+                    // Method 4: Global event dispatch
+                    if (!eventSent) {
+                        window.dispatchEvent(
+                            new CustomEvent("livewire:lokasiDiupdate", {
+                                detail: locationData,
+                            }),
+                        );
+                        console.log("✓ Data sent via custom event (fallback)");
+                        eventSent = true;
+                    }
+
+                    if (!eventSent) {
+                        console.error(
+                            "❌ No Livewire dispatch method available",
+                        );
+                    }
+                } catch (error) {
+                    console.error("Error sending data to Livewire:", error);
+                    showStatus("Gagal mengirim data ke server", "error");
+                }
+
+                // Group results by type for status message
+                const typeCount = processedResults.reduce((acc, loc) => {
+                    acc[loc.type] = (acc[loc.type] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const typeSummary = Object.entries(typeCount)
+                    .map(([type, count]) => `${count} ${type}`)
+                    .join(", ");
 
                 showStatus(
-                    `Ditemukan ${results.length} lokasi PMI. Silakan pilih dari dropdown.`,
+                    `Ditemukan ${processedResults.length} lokasi: ${typeSummary}. Pilih dari dropdown.`,
                     "success",
                 );
             })
             .catch((error) => {
                 console.error("Search error:", error);
-                showStatus("Gagal mencari lokasi PMI", "error");
+                showStatus("Gagal mencari lokasi donor darah", "error");
             });
     }
 
@@ -308,7 +610,7 @@
         );
     };
 
-    // Initialize map on page load
+    // Initialize map when page loads
     document.addEventListener("DOMContentLoaded", function () {
         initMap();
     });

@@ -5,7 +5,7 @@
             <div class="flex flex-col items-center md:flex-row md:justify-between mb-6">
                 <!-- Logo -->
                 <div class="mb-4 md:mb-0">
-                    <h1 class="text-3xl font-bold tracking-wider uppercase">Leonicare</h1>
+                    <h1 class="text-xl font-bold tracking-wider uppercase">Leonicare</h1>
                 </div>
 
                 <!-- Social Icons -->
@@ -39,14 +39,14 @@
                 <!-- Menu Links -->
                 <div class="flex flex-wrap justify-center space-x-3 md:space-x-4 mb-4 md:mb-0">
                     <span>|</span>
-                    <a href="#" class="hover:underline uppercase">Donations</a>
+                    <a href="#" class="hover:underline uppercase text-xs">Donations</a>
                     <span>|</span>
-                    <a href="#" class="hover:underline uppercase">Blood Supply</a>
-                    <a href="#" class="hover:underline uppercase">Contact</a>
+                    <a href="#" class="hover:underline uppercase text-xs">Blood Supply</a>
+                    <a href="#" class="hover:underline uppercase text-xs">Contact</a>
                     <span>|</span>
-                    <a href="#" class="hover:underline uppercase">Events</a>
+                    <a href="#" class="hover:underline uppercase text-xs">Events</a>
                     <span>|</span>
-                    <a href="#" class="hover:underline uppercase">About Us</a>
+                    <a href="#" class="hover:underline uppercase text-xs">About Us</a>
                     <span>|</span>
 
                 </div>

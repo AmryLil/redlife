@@ -258,35 +258,6 @@ class Donations extends Page implements HasForms
                                             return $this->userLocationCoords ?: Session::get('user_location_coords', '');
                                         }),
                                     // FIX 5: Perbaiki Select component
-                                    Select::make('lokasi_donor_id')
-                                        ->label('Tempat Donor')
-                                        ->placeholder(function () {
-                                            $locations = $this->getLocationData();
-                                            return !empty($locations) ? 'Pilih tempat donor' : 'Klik "Ambil Lokasi" terlebih dahulu';
-                                        })
-                                        ->options(function () {
-                                            return $this->donationLocationOptions;
-                                        })
-                                        ->searchable()
-                                        ->required()
-                                        // FIX 6: Hapus reactive dan live yang conflict
-                                        ->afterStateUpdated(function ($state) {
-                                            if ($state) {
-                                                $this->updatedDataLokasiDonorId($state);
-                                            }
-                                        })
-                                        ->helperText(function () {
-                                            $locations = $this->getLocationData();
-                                            $count     = count($locations);
-                                            return !empty($locations)
-                                                ? "Pilih lokasi donor yang diinginkan ({$count} lokasi tersedia)"
-                                                : 'Klik "Ambil Lokasi" terlebih dahulu untuk melihat pilihan tempat donor';
-                                        }),
-                                    TextInput::make('selected_location_data')
-                                        ->extraAttributes([
-                                            'id' => 'selected_location_data',
-                                        ])
-                                        ->hidden(),
                                     View::make('components.peta-leaflet'),
                                     Select::make('waktu_donor')
                                         ->label('Waktu Donor')
