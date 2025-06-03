@@ -41,44 +41,8 @@ class Donations extends Page implements HasForms
     public bool $locationDataLoaded   = false;
 
     // FIX 1: Tambahkan computed property untuk options
-    public function getDonationLocationOptionsProperty()
-    {
-        $locations = $this->getLocationData();
-
-        if (empty($locations)) {
-            return [];
-        }
-
-        $options = [];
-        foreach ($locations as $location) {
-            if (isset($location['place_id']) && isset($location['display_name'])) {
-                $distance                       = isset($location['distance'])
-                    ? ' (' . number_format($location['distance'], 2) . ' km)'
-                    : '';
-                $options[$location['place_id']] = $location['display_name'] . $distance;
-            }
-        }
-
-        return $options;
-    }
 
     // FIX 2: Method helper untuk mendapatkan data lokasi
-    protected function getLocationData(): array
-    {
-        // Prioritas: property class -> session -> empty array
-        if (!empty($this->donationLocations)) {
-            return $this->donationLocations;
-        }
-
-        $sessionLocations = Session::get('donation_locations', []);
-        if (!empty($sessionLocations)) {
-            $this->donationLocations  = $sessionLocations;
-            $this->locationDataLoaded = Session::get('location_data_loaded', false);
-            return $this->donationLocations;
-        }
-
-        return [];
-    }
 
     public function handleLokasiUpdate(...$args)
     {
@@ -89,52 +53,11 @@ class Donations extends Page implements HasForms
 
         if (count($args) >= 2) {
             $userCoords = $args[0] ?? '';
-            $locations  = $args[1] ?? [];
 
             if (!empty($userCoords)) {
-                $this->userLocationCoords      = $userCoords;
-                $this->data['lokasi_pengguna'] = $userCoords;
-                Session::put('user_location_coords', $userCoords);
-            }
-
-            if (is_array($locations) && !empty($locations)) {
-                $this->donationLocations  = $locations;
-                $this->locationDataLoaded = true;
-                Session::put('donation_locations', $locations);
-                Session::put('location_data_loaded', true);
-
-                Log::info('Locations updated', [
-                    'count'          => count($this->donationLocations),
-                    'first_location' => $this->donationLocations[0] ?? null
-                ]);
-            }
-        } else {
-            // Fallback ke struktur lama
-            $eventData = $args[0] ?? [];
-            if (is_array($eventData) && isset($eventData[0])) {
-                $eventData = $eventData[0];
-            }
-
-            if (isset($eventData['locations']) && is_array($eventData['locations'])) {
-                $this->donationLocations  = $eventData['locations'];
-                $this->locationDataLoaded = true;
-                Session::put('donation_locations', $eventData['locations']);
-                Session::put('location_data_loaded', true);
-            }
-
-            if (isset($eventData['lokasi_pengguna'])) {
-                $this->userLocationCoords      = $eventData['lokasi_pengguna'];
-                $this->data['lokasi_pengguna'] = $eventData['lokasi_pengguna'];
-                Session::put('user_location_coords', $eventData['lokasi_pengguna']);
+                $this->userLocationCoords = $userCoords;
             }
         }
-
-        // FIX 3: Force refresh form dengan re-render select
-        $this->resetValidation();
-        unset($this->data['lokasi_donor_id']);
-
-        // Dispatch event untuk refresh component
-        $this->dispatch('$refresh');
     }
 
     public function mount(): void
@@ -158,19 +81,11 @@ class Donations extends Page implements HasForms
     protected function loadLocationDataFromSession(): void
     {
         if (Session::has('donation_locations')) {
-            $this->donationLocations  = Session::get('donation_locations', []);
-            $this->locationDataLoaded = Session::get('location_data_loaded', false);
             $this->userLocationCoords = Session::get('user_location_coords', '');
 
             if (!empty($this->userLocationCoords)) {
                 $this->data['lokasi_pengguna'] = $this->userLocationCoords;
             }
-
-            Log::info('Loaded location data from session', [
-                'locations_count'    => count($this->donationLocations),
-                'locationDataLoaded' => $this->locationDataLoaded,
-                'userLocationCoords' => $this->userLocationCoords
-            ]);
         }
     }
 
@@ -290,14 +205,9 @@ class Donations extends Page implements HasForms
                                         ->label('Lokasi Donor')
                                         ->disabled()
                                         ->dehydrated()
-                                        ->default(function ($get) {
-                                            $selectedData = $get('selected_location_data');
-                                            if ($selectedData) {
-                                                $locationData = json_decode($selectedData, true);
-                                                return $locationData['display_name'] ?? 'Lokasi tidak diketahui';
-                                            }
-                                            return 'Lokasi belum dipilih';
-                                        }),
+                                        ->extraAttributes([
+                                            'id' => 'lokasi_terpilih',
+                                        ]),
                                     TextInput::make('waktu_donor')
                                         ->label('Waktu Donor')
                                         ->disabled()
