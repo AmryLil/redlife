@@ -4,6 +4,10 @@
 <div wire:ignore>
     <div id="map" style="height: 400px; border: 2px solid #ddd; border-radius: 8px; margin: 10px 0;"></div>
 
+    <input type="hidden" id="lokasi_pengguna" name="lokasi_pengguna" value="{{ old('lokasi_pengguna') }}">
+    <input type="hidden" id="selected_location_data" name="selected_location_data"
+        value="{{ old('selected_location_data') }}">
+
     <div id="locationSelector" style="display: none; flex: 1;">
         <label for="selectedLocation" style="display: block; font-weight: 500; margin-bottom: 4px; font-size: 14px;">
             Pilih Lokasi Donor:

@@ -2,20 +2,22 @@
     "use strict";
 
     // Global variables
-    let map,
-        userMarker = null,
-        pmiMarkers = [],
-        selectedMarker = null,
-        routeLayer = null;
-    let isMapReady = false;
-    let availableLocations = []; // Store available PMI locations
-    let userCoordinates = null; // Store user coordinates for routing
+    let map;
+    let userMarker = null;
+    let selectedMarker = null;
+    let locationMarkers = [];
+    let routeLayer = null;
+    let availableLocations = [];
+    let userCoordinates = null;
 
-    // Enhanced Haversine Formula Configuration
-    const EARTH_RADIUS_KM = 6371; // Earth's radius in kilometers
-    const MAX_SEARCH_RADIUS_KM = 50; // Maximum search radius in km
-    const MAX_RESULTS = 20; // Maximum number of results to show
-    const MIN_DISTANCE_THRESHOLD = 0.1; // Minimum distance in km to avoid duplicates
+    // Configuration
+    const CONFIG = {
+        EARTH_RADIUS_KM: 6371,
+        MAX_SEARCH_RADIUS_KM: 50,
+        MAX_RESULTS: 20,
+        DEFAULT_ZOOM: 13,
+        MIN_DISTANCE_THRESHOLD: 0.1,
+    };
 
     // Utility functions
     function getElement(id) {
@@ -26,11 +28,37 @@
         const el = getElement(id);
         if (el) {
             el.value = value;
-            // Trigger change event untuk Livewire
             el.dispatchEvent(new Event("change"));
             return true;
         }
-        console.warn(`Element ${id} not found`);
+        return false;
+    }
+
+    // PERBAIKAN: Fungsi khusus untuk update Filament form field
+    function updateFilamentField(wireModel, value) {
+        // Cari input dengan wire:model yang sesuai
+        const selectors = [
+            `input[wire\\:model="${wireModel}"]`,
+            `input[wire\\:model\\.defer="${wireModel}"]`,
+            `input[wire\\:model\\.lazy="${wireModel}"]`,
+            `select[wire\\:model="${wireModel}"]`,
+            `textarea[wire\\:model="${wireModel}"]`,
+        ];
+
+        for (let selector of selectors) {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.value = value;
+                // Trigger berbagai event untuk memastikan Livewire mendeteksi perubahan
+                element.dispatchEvent(new Event("input", { bubbles: true }));
+                element.dispatchEvent(new Event("change", { bubbles: true }));
+                element.dispatchEvent(new Event("blur", { bubbles: true }));
+                console.log(`Updated Filament field ${wireModel}:`, value);
+                return true;
+            }
+        }
+
+        console.warn(`Filament field not found: ${wireModel}`);
         return false;
     }
 
@@ -41,76 +69,51 @@
         status.textContent = message;
         status.style.display = "block";
 
-        // Set colors based on type
-        switch (type) {
-            case "error":
-                status.style.backgroundColor = "#fee2e2";
-                status.style.color = "#991b1b";
-                break;
-            case "success":
-                status.style.backgroundColor = "#d1fae5";
-                status.style.color = "#065f46";
-                break;
-            case "loading":
-                status.style.backgroundColor = "#fef3c7";
-                status.style.color = "#92400e";
-                break;
-            default:
-                status.style.backgroundColor = "#dbeafe";
-                status.style.color = "#1e40af";
-        }
+        const colors = {
+            error: { bg: "#fee2e2", color: "#991b1b" },
+            success: { bg: "#d1fae5", color: "#065f46" },
+            loading: { bg: "#fef3c7", color: "#92400e" },
+            info: { bg: "#dbeafe", color: "#1e40af" },
+        };
 
-        // Auto hide after 5 seconds (except loading)
+        const color = colors[type] || colors.info;
+        status.style.backgroundColor = color.bg;
+        status.style.color = color.color;
+
         if (type !== "loading") {
-            setTimeout(() => {
-                status.style.display = "none";
-            }, 5000);
+            setTimeout(() => (status.style.display = "none"), 5000);
         }
     }
 
-    // Enhanced Haversine Formula Implementation
-    function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
-        // Convert latitude and longitude from degrees to radians
-        const toRadians = (degrees) => degrees * (Math.PI / 180);
-
-        const lat1Rad = toRadians(lat1);
-        const lat2Rad = toRadians(lat2);
-        const deltaLatRad = toRadians(lat2 - lat1);
-        const deltaLonRad = toRadians(lon2 - lon1);
-
-        // Haversine formula
-        const a =
-            Math.sin(deltaLatRad / 2) * Math.sin(deltaLatRad / 2) +
-            Math.cos(lat1Rad) *
-                Math.cos(lat2Rad) *
-                Math.sin(deltaLonRad / 2) *
-                Math.sin(deltaLonRad / 2);
-
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        // Distance in kilometers
-        return EARTH_RADIUS_KM * c;
-    }
-
-    // Enhanced distance calculation with bearing
+    // Calculate distance and bearing using Haversine formula
     function calculateDistanceWithBearing(lat1, lon1, lat2, lon2) {
-        const distance = calculateHaversineDistance(lat1, lon1, lat2, lon2);
-
-        // Calculate bearing (direction)
         const toRadians = (degrees) => degrees * (Math.PI / 180);
         const toDegrees = (radians) => radians * (180 / Math.PI);
 
+        // Distance calculation
         const lat1Rad = toRadians(lat1);
         const lat2Rad = toRadians(lat2);
-        const deltaLonRad = toRadians(lon2 - lon1);
+        const deltaLat = toRadians(lat2 - lat1);
+        const deltaLon = toRadians(lon2 - lon1);
 
-        const y = Math.sin(deltaLonRad) * Math.cos(lat2Rad);
+        const a =
+            Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+            Math.cos(lat1Rad) *
+                Math.cos(lat2Rad) *
+                Math.sin(deltaLon / 2) *
+                Math.sin(deltaLon / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = CONFIG.EARTH_RADIUS_KM * c;
+
+        // Bearing calculation
+        const y = Math.sin(deltaLon) * Math.cos(lat2Rad);
         const x =
             Math.cos(lat1Rad) * Math.sin(lat2Rad) -
-            Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(deltaLonRad);
+            Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(deltaLon);
 
         let bearing = toDegrees(Math.atan2(y, x));
-        bearing = (bearing + 360) % 360; // Normalize to 0-360 degrees
+        bearing = (bearing + 360) % 360;
 
         return {
             distance: distance,
@@ -135,52 +138,75 @@
         return directions[index];
     }
 
-    // Filter locations by distance and remove duplicates
-    function filterLocationsByDistance(
-        locations,
-        userLat,
-        userLon,
-        maxRadius = MAX_SEARCH_RADIUS_KM,
-    ) {
-        const filteredLocations = [];
+    // Get location type and details
+    function getLocationType(name) {
+        const lowerName = name.toLowerCase();
+
+        if (lowerName.includes("pmi") || lowerName.includes("palang merah")) {
+            return { type: "PMI", icon: "🏥", color: "#dc2626", priority: 1 };
+        }
+        if (lowerName.includes("utd") || lowerName.includes("unit transfusi")) {
+            return { type: "UTD", icon: "🩸", color: "#7c2d12", priority: 2 };
+        }
+        if (
+            lowerName.includes("rumah sakit") ||
+            lowerName.includes("rs ") ||
+            lowerName.includes("hospital")
+        ) {
+            return { type: "RS", icon: "🏨", color: "#059669", priority: 3 };
+        }
+        if (lowerName.includes("klinik")) {
+            return {
+                type: "Klinik",
+                icon: "🏥",
+                color: "#0891b2",
+                priority: 4,
+            };
+        }
+        return { type: "Kesehatan", icon: "⚕️", color: "#6366f1", priority: 5 };
+    }
+
+    // Extract clean location name
+    function extractLocationName(displayName) {
+        const parts = displayName.split(",");
+        if (parts.length >= 2) {
+            return parts.slice(0, 2).join(", ").trim();
+        }
+        return displayName.length > 50
+            ? displayName.substring(0, 50) + "..."
+            : displayName;
+    }
+
+    // Process and filter locations
+    function processLocations(locations, userLat, userLon) {
+        const processed = [];
         const processedCoordinates = new Set();
 
         locations.forEach((location) => {
             const lat = parseFloat(location.lat);
             const lon = parseFloat(location.lon);
 
-            // Skip invalid coordinates
-            if (isNaN(lat) || isNaN(lon)) {
-                console.warn("Invalid coordinates:", location);
-                return;
-            }
+            if (isNaN(lat) || isNaN(lon)) return;
 
-            // Calculate distance using Haversine formula
             const distanceData = calculateDistanceWithBearing(
                 userLat,
                 userLon,
                 lat,
                 lon,
             );
+            if (distanceData.distance > CONFIG.MAX_SEARCH_RADIUS_KM) return;
 
-            // Filter by maximum radius
-            if (distanceData.distance > maxRadius) {
-                return;
-            }
-
-            // Create coordinate key for duplicate detection
+            // Check for duplicates
             const coordKey = `${lat.toFixed(4)},${lon.toFixed(4)}`;
-
-            // Skip if too close to existing location (potential duplicate)
             let isDuplicate = false;
-            for (const existingLocation of filteredLocations) {
-                const existingDistance = calculateHaversineDistance(
+            for (const existing of processed) {
+                const existingDistance = calculateDistanceWithBearing(
                     lat,
                     lon,
-                    existingLocation.lat,
-                    existingLocation.lon,
+                    existing.lat,
+                    existing.lon,
                 );
-                if (existingDistance < MIN_DISTANCE_THRESHOLD) {
+                if (existingDistance.distance < CONFIG.MIN_DISTANCE_THRESHOLD) {
                     isDuplicate = true;
                     break;
                 }
@@ -188,60 +214,35 @@
 
             if (!isDuplicate && !processedCoordinates.has(coordKey)) {
                 processedCoordinates.add(coordKey);
+                const locationInfo = getLocationType(location.display_name);
 
-                const locationType = getLocationType(location.display_name);
-
-                filteredLocations.push({
+                processed.push({
                     place_id: String(location.place_id),
                     display_name: String(location.display_name),
+                    name: extractLocationName(location.display_name),
                     lat: lat,
                     lon: lon,
                     distance: distanceData.distance,
                     bearing: distanceData.bearing,
                     direction: distanceData.direction,
-                    type: locationType.type,
-                    icon: locationType.icon,
-                    color: locationType.color,
-                    priority: getLocationPriority(locationType.type),
+                    type: locationInfo.type,
+                    icon: locationInfo.icon,
+                    color: locationInfo.color,
+                    priority: locationInfo.priority,
                 });
             }
         });
 
-        return filteredLocations;
-    }
-
-    // Get location priority for sorting (lower number = higher priority)
-    function getLocationPriority(type) {
-        const priorities = {
-            PMI: 1,
-            UTD: 2,
-            RS: 3,
-            Klinik: 4,
-            Kesehatan: 5,
-        };
-        return priorities[type] || 6;
-    }
-
-    // Advanced sorting with multiple criteria
-    function sortLocationsByMultipleCriteria(locations) {
-        return locations.sort((a, b) => {
-            // Primary sort: Priority (PMI first, then UTD, etc.)
-            if (a.priority !== b.priority) {
-                return a.priority - b.priority;
-            }
-
-            // Secondary sort: Distance (closer first)
-            if (Math.abs(a.distance - b.distance) > 0.1) {
-                // Only if significant difference
+        // Sort by priority then distance
+        return processed
+            .sort((a, b) => {
+                if (a.priority !== b.priority) return a.priority - b.priority;
                 return a.distance - b.distance;
-            }
-
-            // Tertiary sort: Name length (shorter names first, usually more specific)
-            return a.display_name.length - b.display_name.length;
-        });
+            })
+            .slice(0, CONFIG.MAX_RESULTS);
     }
 
-    // Group locations by distance ranges
+    // Group locations by distance
     function groupLocationsByDistance(locations) {
         const groups = {
             very_close: [], // 0-2 km
@@ -253,53 +254,17 @@
 
         locations.forEach((location) => {
             const distance = location.distance;
-            if (distance <= 2) {
-                groups.very_close.push(location);
-            } else if (distance <= 5) {
-                groups.close.push(location);
-            } else if (distance <= 10) {
-                groups.moderate.push(location);
-            } else if (distance <= 25) {
-                groups.far.push(location);
-            } else {
-                groups.very_far.push(location);
-            }
+            if (distance <= 2) groups.very_close.push(location);
+            else if (distance <= 5) groups.close.push(location);
+            else if (distance <= 10) groups.moderate.push(location);
+            else if (distance <= 25) groups.far.push(location);
+            else groups.very_far.push(location);
         });
 
         return groups;
     }
 
-    // Initialize map
-    function initMap() {
-        try {
-            if (isMapReady || !getElement("map")) return;
-
-            map = L.map("map").setView([-5.147665, 119.432732], 13);
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                maxZoom: 19,
-                attribution: "© OpenStreetMap",
-            }).addTo(map);
-
-            isMapReady = true;
-            console.log("Map initialized");
-        } catch (error) {
-            console.error("Map init error:", error);
-            showStatus("Gagal memuat peta", "error");
-        }
-    }
-
-    // Format duration from seconds to readable format
-    function formatDuration(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-
-        if (hours > 0) {
-            return `${hours} jam ${minutes} menit`;
-        }
-        return `${minutes} menit`;
-    }
-
-    // Get route between two points using OSRM
+    // Get route using OSRM
     async function getRoute(startLat, startLon, endLat, endLon) {
         try {
             const url = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson&steps=true`;
@@ -307,17 +272,15 @@
             showStatus("Mencari rute terbaik...", "loading");
 
             const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const data = await response.json();
 
             if (data.routes && data.routes.length > 0) {
                 return {
                     geometry: data.routes[0].geometry,
-                    distance: data.routes[0].distance, // in meters
-                    duration: data.routes[0].duration, // in seconds
+                    distance: data.routes[0].distance,
+                    duration: data.routes[0].duration,
                     legs: data.routes[0].legs,
                 };
             }
@@ -330,18 +293,25 @@
         }
     }
 
+    // Format duration
+    function formatDuration(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+
+        if (hours > 0) {
+            return `${hours} jam ${minutes} menit`;
+        }
+        return `${minutes} menit`;
+    }
+
     // Draw route on map
     function drawRoute(routeData) {
-        // Remove existing route
         if (routeLayer && map.hasLayer(routeLayer)) {
             map.removeLayer(routeLayer);
         }
 
-        if (!routeData || !routeData.geometry) {
-            return;
-        }
+        if (!routeData || !routeData.geometry) return;
 
-        // Create route layer with custom styling
         routeLayer = L.geoJSON(routeData.geometry, {
             style: {
                 color: "#3b82f6",
@@ -351,7 +321,7 @@
             },
         }).addTo(map);
 
-        // Fit map to show entire route
+        // Fit map to show route
         const group = new L.featureGroup([
             routeLayer,
             userMarker,
@@ -359,7 +329,6 @@
         ]);
         map.fitBounds(group.getBounds(), { padding: [20, 20] });
 
-        // Show route info
         const distanceKm = (routeData.distance / 1000).toFixed(2);
         const duration = formatDuration(routeData.duration);
 
@@ -375,48 +344,169 @@
         };
     }
 
-    // Extract location name from display_name
-    function extractLocationName(displayName) {
-        // Try to extract meaningful location name
-        const parts = displayName.split(",");
-        if (parts.length >= 2) {
-            // Return first two parts for more context
-            return parts.slice(0, 2).join(", ").trim();
-        }
-        return displayName.length > 50
-            ? displayName.substring(0, 50) + "..."
-            : displayName;
+    // Initialize map
+    function initMap() {
+        if (!getElement("map")) return;
+
+        map = L.map("map").setView(
+            [-5.147665, 119.432732],
+            CONFIG.DEFAULT_ZOOM,
+        );
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "© OpenStreetMap",
+        }).addTo(map);
+
+        console.log("Map initialized");
     }
 
-    // Enhanced populate location selector with distance grouping
-    function populateLocationSelector(locations) {
+    // Set user location
+    function setUserLocation(lat, lon) {
+        if (!map) return;
+
+        userCoordinates = { lat, lon };
+
+        if (userMarker) map.removeLayer(userMarker);
+
+        userMarker = L.marker([lat, lon]).addTo(map);
+        userMarker.bindPopup("📍 Lokasi Anda").openPopup();
+
+        map.setView([lat, lon], CONFIG.DEFAULT_ZOOM);
+
+        setElementValue(
+            "lokasi_pengguna",
+            `${lat.toFixed(6)}, ${lon.toFixed(6)}`,
+        );
+
+        findDonorLocations(lat, lon);
+    }
+
+    // Find donor locations
+    function findDonorLocations(userLat, userLon) {
+        showStatus("Mencari lokasi donor darah...", "loading");
+
+        // Clear old markers
+        locationMarkers.forEach((marker) => map.removeLayer(marker));
+        locationMarkers = [];
+
+        if (routeLayer) map.removeLayer(routeLayer);
+
+        const selector = getElement("locationSelector");
+        const info = getElement("selectedLocationInfo");
+        if (selector) selector.style.display = "none";
+        if (info) info.style.display = "none";
+
+        const queries = [
+            "PMI+Makassar",
+            "UTD+Makassar",
+            "Unit+Transfusi+Darah+Makassar",
+            "Rumah+Sakit+Makassar",
+            "RS+Makassar",
+            "Palang+Merah+Indonesia+Makassar",
+        ];
+
+        const searchPromises = queries.map((query) => {
+            const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=10&countrycodes=id`;
+            return fetch(url)
+                .then((response) => (response.ok ? response.json() : []))
+                .catch(() => []);
+        });
+
+        Promise.all(searchPromises)
+            .then((results) => {
+                const allLocations = results.flat();
+
+                if (allLocations.length === 0) {
+                    showStatus("Tidak ditemukan lokasi donor darah", "error");
+                    return;
+                }
+
+                const processedLocations = processLocations(
+                    allLocations,
+                    userLat,
+                    userLon,
+                );
+
+                if (processedLocations.length === 0) {
+                    showStatus(
+                        `Tidak ada lokasi dalam radius ${CONFIG.MAX_SEARCH_RADIUS_KM} km`,
+                        "error",
+                    );
+                    return;
+                }
+
+                availableLocations = processedLocations;
+
+                // Add markers with different colors
+                processedLocations.forEach((location) => {
+                    const marker = L.marker([location.lat, location.lon], {
+                        icon: L.divIcon({
+                            html: `<div style="background-color: ${location.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px;">${location.icon}</div>`,
+                            className: "custom-marker",
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10],
+                        }),
+                    }).addTo(map);
+
+                    marker.bindPopup(`
+                        <strong>${location.icon} ${location.type}</strong><br>
+                        <small>${location.name}</small><br>
+                        <small>Jarak: ${location.distance.toFixed(2)} km</small><br>
+                        <small>Arah: ${location.direction} (${location.bearing.toFixed(1)}°)</small>
+                    `);
+                    locationMarkers.push(marker);
+                });
+
+                populateSelector(processedLocations);
+                sendToLivewire({
+                    lokasi_pengguna: `${userLat.toFixed(6)}, ${userLon.toFixed(6)}`,
+                    locations: processedLocations,
+                    distance_groups:
+                        groupLocationsByDistance(processedLocations),
+                });
+
+                const typeCount = processedLocations.reduce((acc, loc) => {
+                    acc[loc.type] = (acc[loc.type] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const typeSummary = Object.entries(typeCount)
+                    .map(([type, count]) => `${count} ${type}`)
+                    .join(", ");
+
+                showStatus(
+                    `Ditemukan ${processedLocations.length} lokasi (${typeSummary})`,
+                    "success",
+                );
+            })
+            .catch((error) => {
+                console.error("Search error:", error);
+                showStatus("Gagal mencari lokasi", "error");
+            });
+    }
+
+    // Populate location selector with distance groups
+    function populateSelector(locations) {
         const selector = getElement("selectedLocation");
         const selectorContainer = getElement("locationSelector");
 
-        if (!selector || !selectorContainer) {
-            console.error("Location selector elements not found");
-            return;
-        }
+        if (!selector || !selectorContainer) return;
 
-        // Clear existing options
         selector.innerHTML =
             '<option value="">-- Pilih Lokasi Donor --</option>';
 
-        // Group locations by distance
         const groups = groupLocationsByDistance(locations);
 
-        // Add locations to dropdown with distance group headers
-        const addGroupToSelector = (groupLocations, groupLabel) => {
+        const addGroup = (groupLocations, groupLabel) => {
             if (groupLocations.length > 0) {
-                // Add group header
                 const groupHeader = document.createElement("optgroup");
                 groupHeader.label = groupLabel;
 
-                groupLocations.forEach((location, localIndex) => {
+                groupLocations.forEach((location) => {
                     const globalIndex = locations.indexOf(location);
                     const option = document.createElement("option");
                     option.value = globalIndex;
-                    option.textContent = `${location.icon} ${location.type} - ${extractLocationName(location.display_name)} (${location.distance.toFixed(2)} km ${location.direction})`;
+                    option.textContent = `${location.icon} ${location.type} - ${location.name} (${location.distance.toFixed(2)} km ${location.direction})`;
                     groupHeader.appendChild(option);
                 });
 
@@ -424,29 +514,26 @@
             }
         };
 
-        // Add groups in order of distance
-        addGroupToSelector(groups.very_close, "🟢 Sangat Dekat (0-2 km)");
-        addGroupToSelector(groups.close, "🔵 Dekat (2-5 km)");
-        addGroupToSelector(groups.moderate, "🟡 Sedang (5-10 km)");
-        addGroupToSelector(groups.far, "🟠 Jauh (10-25 km)");
-        addGroupToSelector(groups.very_far, "🔴 Sangat Jauh (25+ km)");
+        addGroup(groups.very_close, "🟢 Sangat Dekat (0-2 km)");
+        addGroup(groups.close, "🔵 Dekat (2-5 km)");
+        addGroup(groups.moderate, "🟡 Sedang (5-10 km)");
+        addGroup(groups.far, "🟠 Jauh (10-25 km)");
+        addGroup(groups.very_far, "🔴 Sangat Jauh (25+ km)");
 
-        // Show selector
         selectorContainer.style.display = "block";
 
-        // Add change event listener
         selector.onchange = function () {
             handleLocationSelection(this.value);
         };
     }
 
-    // Handle location selection with routing
+    // PERBAIKAN UTAMA: Handle location selection dengan update yang tepat ke Filament
     async function handleLocationSelection(selectedIndex) {
         const selectedLocationInfo = getElement("selectedLocationInfo");
         const locationDetails = getElement("locationDetails");
 
         if (selectedIndex === "" || selectedIndex === null) {
-            // Hide info and remove selected marker and route
+            // Reset selection
             if (selectedLocationInfo)
                 selectedLocationInfo.style.display = "none";
             if (selectedMarker && map.hasLayer(selectedMarker)) {
@@ -457,16 +544,32 @@
                 map.removeLayer(routeLayer);
                 routeLayer = null;
             }
+
+            // Clear semua field Filament
+            updateFilamentField("data.lokasi_donor_id", "");
+            updateFilamentField("data.summary_lokasi", "");
+            updateFilamentField("data.selected_location_data", "");
+
+            // Kirim data kosong ke Livewire
+            sendToLivewire(
+                {
+                    lokasi_donor_terpilih: null,
+                    selected_location_data: null,
+                    lokasi_donor_id: "",
+                    summary_lokasi: "",
+                },
+                "lokasiDonorDipilih",
+            );
+
             return;
         }
 
         const location = availableLocations[parseInt(selectedIndex)];
-        if (!location) {
-            console.error("Selected location not found");
-            return;
-        }
+        if (!location) return;
 
-        // Remove previous selected marker and route
+        console.log("Selected location:", location);
+
+        // Remove previous markers and routes
         if (selectedMarker && map.hasLayer(selectedMarker)) {
             map.removeLayer(selectedMarker);
         }
@@ -474,9 +577,8 @@
             map.removeLayer(routeLayer);
         }
 
-        // Add new selected marker with different icon
+        // Add selected marker
         selectedMarker = L.marker([location.lat, location.lon], {
-            // Create custom selected icon
             icon: L.divIcon({
                 html: '<div style="background-color: #ef4444; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
                 className: "selected-marker",
@@ -484,23 +586,22 @@
                 iconAnchor: [12, 12],
             }),
         }).addTo(map);
-        setElementValue("lokasi_terpilih", location.display_name);
+
         selectedMarker
             .bindPopup(
                 `
-                <strong>🎯 Lokasi Donor Terpilih</strong><br>
-                <strong>${location.icon} ${location.type}</strong><br>
-                <small>${extractLocationName(location.display_name)}</small><br>
-                <small>Jarak: ${location.distance.toFixed(2)} km (${location.direction})</small><br>
-                <small>Bearing: ${location.bearing.toFixed(1)}°</small>
-            `,
+            <strong>🎯 Lokasi Donor Terpilih</strong><br>
+            <strong>${location.icon} ${location.type}</strong><br>
+            <small>${location.name}</small><br>
+            <small>Jarak: ${location.distance.toFixed(2)} km (${location.direction})</small><br>
+            <small>Bearing: ${location.bearing.toFixed(1)}°</small>
+        `,
             )
             .openPopup();
 
-        // Center map on selected location
         map.setView([location.lat, location.lon], 15);
 
-        // Get and draw route if user location is available
+        // Get route if user location available
         let routeInfo = null;
         if (userCoordinates) {
             const routeData = await getRoute(
@@ -515,7 +616,47 @@
             }
         }
 
-        // Show location info with route details
+        // PERBAIKAN: Siapkan data lokasi yang akan dikirim
+        const locationDisplayName = location.display_name;
+        const locationPlaceId = location.place_id;
+
+        // Data untuk Livewire
+        const selectedLocationData = {
+            lokasi_donor_terpilih: {
+                jenis: location.type,
+                nama: location.name,
+                alamat: locationDisplayName,
+                koordinat: `${location.lat.toFixed(6)}, ${location.lon.toFixed(6)}`,
+                jarak: location.distance.toFixed(2),
+                arah: location.direction,
+                bearing: location.bearing.toFixed(1),
+                place_id: locationPlaceId,
+                icon: location.icon,
+                priority: location.priority,
+                lat: location.lat,
+                lon: location.lon,
+                route_info: routeInfo
+                    ? {
+                          distance: routeInfo.distance,
+                          duration: routeInfo.duration,
+                          duration_seconds: routeInfo.durationSeconds,
+                      }
+                    : null,
+            },
+        };
+
+        // PERBAIKAN: Update field Filament secara langsung
+        updateFilamentField("data.lokasi_donor_id", locationPlaceId);
+        updateFilamentField("data.summary_lokasi", locationDisplayName);
+        updateFilamentField(
+            "data.selected_location_data",
+            JSON.stringify(selectedLocationData),
+        );
+
+        // PERBAIKAN: Update field khusus untuk step 3 (ringkasan)
+        setElementValue("lokasi_terpilih", locationDisplayName);
+
+        // Show detailed location info
         if (selectedLocationInfo && locationDetails) {
             let routeHtml = "";
             if (routeInfo) {
@@ -529,393 +670,107 @@
             }
 
             locationDetails.innerHTML = `
-                    <div style="margin-bottom: 8px;"><strong>Jenis:</strong> ${location.icon} ${location.type}</div>
-                    <div style="margin-bottom: 6px;"><strong>Nama:</strong> ${extractLocationName(location.display_name)}</div>
-                    <div style="margin-bottom: 6px;"><strong>Alamat:</strong> ${location.display_name}</div>
-                    <div style="margin-bottom: 6px;"><strong>Jarak Lurus:</strong> ${location.distance.toFixed(2)} km</div>
-                    <div style="margin-bottom: 8px;"><strong>Arah:</strong> ${location.direction} (${location.bearing.toFixed(1)}°)</div>
-                    ${routeHtml}
-                `;
+                <div style="margin-bottom: 8px;"><strong>Jenis:</strong> ${location.icon} ${location.type}</div>
+                <div style="margin-bottom: 6px;"><strong>Nama:</strong> ${location.name}</div>
+                <div style="margin-bottom: 6px;"><strong>Alamat:</strong> ${location.display_name}</div>
+                <div style="margin-bottom: 6px;"><strong>Jarak Lurus:</strong> ${location.distance.toFixed(2)} km</div>
+                <div style="margin-bottom: 8px;"><strong>Arah:</strong> ${location.direction} (${location.bearing.toFixed(1)}°)</div>
+                ${routeHtml}
+            `;
             selectedLocationInfo.style.display = "block";
         }
 
-        // Send selected location data to Livewire (including route info and bearing)
-        const locationData = {
+        // PERBAIKAN: Kirim data lengkap ke Livewire dengan struktur yang benar
+        const livewireData = {
             lokasi_pengguna: getElement("lokasi_pengguna")
                 ? getElement("lokasi_pengguna").value
                 : "",
-            lokasi_donor_terpilih: {
-                jenis: location.type,
-                nama: extractLocationName(location.display_name),
-                alamat: location.display_name,
-                koordinat: `${location.lat.toFixed(6)}, ${location.lon.toFixed(6)}`,
-                jarak: location.distance.toFixed(2),
-                arah: location.direction,
-                bearing: location.bearing.toFixed(1),
-                place_id: location.place_id,
-                icon: location.icon,
-                priority: location.priority,
-                route_info: routeInfo
-                    ? {
-                          distance: routeInfo.distance,
-                          duration: routeInfo.duration,
-                          duration_seconds: routeInfo.durationSeconds,
-                      }
-                    : null,
-            },
+            lokasi_donor_terpilih: selectedLocationData.lokasi_donor_terpilih,
+            lokasi_donor_id: locationPlaceId,
+            summary_lokasi: locationDisplayName,
+            selected_location_data: JSON.stringify(selectedLocationData),
         };
 
-        // Send to Livewire
+        console.log("Sending complete data to Livewire:", livewireData);
+
+        // Kirim ke Livewire
+        sendToLivewire(livewireData, "lokasiDonorDipilih");
+
+        // PERBAIKAN: Tambahan untuk memastikan form terupdate
+        setTimeout(() => {
+            // Force refresh Livewire component
+            if (window.Livewire && window.Livewire.find) {
+                const component = document.querySelector("[wire\\:id]");
+                if (component && component.getAttribute("wire:id")) {
+                    const livewireComponent = window.Livewire.find(
+                        component.getAttribute("wire:id"),
+                    );
+                    if (livewireComponent && livewireComponent.$refresh) {
+                        livewireComponent.$refresh();
+                    }
+                }
+            }
+        }, 100);
+    }
+
+    // PERBAIKAN: Fungsi sendToLivewire yang lebih robust
+    function sendToLivewire(data, eventName = "lokasiDiupdate") {
+        console.log(`Sending to Livewire (${eventName}):`, data);
+
         try {
             let eventSent = false;
 
-            // Method 1: Livewire v3 style
-            if (window.Livewire && typeof Livewire.dispatch === "function") {
-                Livewire.dispatch("lokasiDonorDipilih", locationData);
-                console.log(
-                    "✓ Selected location sent via Livewire.dispatch (v3)",
+            // Coba berbagai cara untuk mengirim ke Livewire
+            if (window.Livewire?.dispatch) {
+                window.Livewire.dispatch(eventName, data);
+                eventSent = true;
+                console.log("✓ Sent via Livewire.dispatch");
+            } else if (window.livewire?.emit) {
+                window.livewire.emit(eventName, data);
+                eventSent = true;
+                console.log("✓ Sent via livewire.emit");
+            } else if (window.Livewire?.emit) {
+                window.Livewire.emit(eventName, data);
+                eventSent = true;
+                console.log("✓ Sent via Livewire.emit");
+            }
+
+            // Fallback: coba dengan Alpine.js events
+            if (!eventSent && window.Alpine) {
+                window.Alpine.store("locationData", data);
+                document.dispatchEvent(
+                    new CustomEvent(eventName, { detail: data }),
                 );
+                console.log("✓ Sent via Alpine/CustomEvent");
                 eventSent = true;
             }
 
-            // Method 2: Livewire v2 style
-            if (
-                !eventSent &&
-                window.livewire &&
-                typeof window.livewire.emit === "function"
-            ) {
-                window.livewire.emit("lokasiDonorDipilih", locationData);
-                console.log("✓ Selected location sent via livewire.emit (v2)");
-                eventSent = true;
-            }
-
-            // Method 3: Fallback Livewire v2/v3
-            if (
-                !eventSent &&
-                window.Livewire &&
-                typeof Livewire.emit === "function"
-            ) {
-                Livewire.emit("lokasiDonorDipilih", locationData);
-                console.log(
-                    "✓ Selected location sent via Livewire.emit (fallback)",
-                );
-                eventSent = true;
-            }
-
+            // Fallback terakhir: DOM event
             if (!eventSent) {
-                console.warn(
-                    "No Livewire dispatch method available for selected location",
-                );
+                const event = new CustomEvent(eventName, {
+                    detail: data,
+                    bubbles: true,
+                    cancelable: true,
+                });
+                document.dispatchEvent(event);
+                console.log("✓ Sent via DOM CustomEvent");
             }
         } catch (error) {
-            console.error(
-                "Error sending selected location to Livewire:",
-                error,
-            );
-        }
+            console.error("Error sending to Livewire:", error);
 
-        console.log("Location selected:", locationData);
-    }
-
-    // Set user location
-    function setUserLocation(lat, lon) {
-        if (!isMapReady) {
-            console.error("Map not ready");
-            return;
-        }
-
-        try {
-            // Store user coordinates for routing
-            userCoordinates = { lat: lat, lon: lon };
-
-            // Remove old marker
-            if (userMarker) {
-                map.removeLayer(userMarker);
-            }
-
-            // Add new marker
-            userMarker = L.marker([lat, lon]).addTo(map);
-            userMarker.bindPopup("📍 Lokasi Anda").openPopup();
-
-            // Center map
-            map.setView([lat, lon], 13);
-
-            // Update form - kirim koordinat ke input lokasi_pengguna
-            setElementValue(
-                "lokasi_pengguna",
-                `${lat.toFixed(6)}, ${lon.toFixed(6)}`,
-            );
-
-            // Find donor locations
-            findPMI(lat, lon);
-        } catch (error) {
-            console.error("Set location error:", error);
-            showStatus("Gagal menandai lokasi", "error");
-        }
-    }
-
-    // Determine location type and icon
-    function getLocationType(displayName) {
-        const name = displayName.toLowerCase();
-        if (name.includes("pmi") || name.includes("palang merah")) {
-            return { type: "PMI", icon: "🏥", color: "#dc2626" };
-        } else if (
-            name.includes("utd") ||
-            name.includes("unit transfusi darah")
-        ) {
-            return { type: "UTD", icon: "🩸", color: "#7c2d12" };
-        } else if (
-            name.includes("rumah sakit") ||
-            name.includes("rs ") ||
-            name.includes("hospital")
-        ) {
-            return { type: "RS", icon: "🏨", color: "#059669" };
-        } else if (name.includes("klinik")) {
-            return { type: "Klinik", icon: "🏥", color: "#0891b2" };
-        }
-        return { type: "Kesehatan", icon: "⚕️", color: "#6366f1" };
-    }
-
-    // Enhanced find donor locations with Haversine filtering and sorting
-    function findPMI(userLat, userLon) {
-        showStatus(
-            "Mencari lokasi donor darah dengan formula Haversine...",
-            "loading",
-        );
-
-        // Clear old markers and routes
-        pmiMarkers.forEach((marker) => {
-            if (map.hasLayer(marker)) {
-                map.removeLayer(marker);
-            }
-        });
-        pmiMarkers = [];
-
-        if (routeLayer && map.hasLayer(routeLayer)) {
-            map.removeLayer(routeLayer);
-            routeLayer = null;
-        }
-
-        // Hide location selector while searching
-        const selectorContainer = getElement("locationSelector");
-        const selectedLocationInfo = getElement("selectedLocationInfo");
-        if (selectorContainer) selectorContainer.style.display = "none";
-        if (selectedLocationInfo) selectedLocationInfo.style.display = "none";
-
-        // Define search queries for different types of donor locations
-        const searchQueries = [
-            "PMI+Makassar",
-            "UTD+Makassar",
-            "Unit+Transfusi+Darah+Makassar",
-            "Rumah+Sakit+Makassar",
-            "RS+Makassar",
-            "Palang+Merah+Indonesia+Makassar",
-        ];
-
-        // Search all types concurrently
-        const searchPromises = searchQueries.map((query) => {
-            const searchUrl = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=10&countrycodes=id`;
-            return fetch(searchUrl)
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .catch((error) => {
-                    console.warn(`Search failed for query: ${query}`, error);
-                    return []; // Return empty array on error
-                });
-        });
-
-        Promise.all(searchPromises)
-            .then((searchResults) => {
-                console.log("All search results:", searchResults);
-
-                // Combine all results
-                const allResults = [];
-                searchResults.forEach((results) => {
-                    if (Array.isArray(results)) {
-                        allResults.push(...results);
-                    }
-                });
-
-                if (allResults.length === 0) {
-                    showStatus("Tidak ditemukan lokasi donor darah", "error");
-                    return;
-                }
-
-                // Filter and process results using enhanced Haversine formula
-                const processedResults = filterLocationsByDistance(
-                    allResults,
-                    userLat,
-                    userLon,
-                    MAX_SEARCH_RADIUS_KM,
+            // Emergency fallback: langsung update DOM
+            if (eventName === "lokasiDonorDipilih" && data.summary_lokasi) {
+                const summaryField = document.querySelector(
+                    'input[wire\\:model="data.summary_lokasi"]',
                 );
-
-                if (processedResults.length === 0) {
-                    showStatus(
-                        `Tidak ada lokasi donor darah dalam radius ${MAX_SEARCH_RADIUS_KM} km`,
-                        "error",
+                if (summaryField) {
+                    summaryField.value = data.summary_lokasi;
+                    summaryField.dispatchEvent(
+                        new Event("input", { bubbles: true }),
                     );
-                    return;
                 }
-
-                // Sort using multiple criteria
-                const sortedResults =
-                    sortLocationsByMultipleCriteria(processedResults);
-
-                // Limit results
-                const finalResults = sortedResults.slice(0, MAX_RESULTS);
-
-                // Store available locations
-                availableLocations = finalResults;
-
-                // Add markers for results with different colors
-                finalResults.forEach((location, index) => {
-                    try {
-                        // Create custom colored marker
-                        const marker = L.marker([location.lat, location.lon], {
-                            icon: L.divIcon({
-                                html: `<div style="background-color: ${location.color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 10px;">${location.icon}</div>`,
-                                className: "custom-marker",
-                                iconSize: [20, 20],
-                                iconAnchor: [10, 10],
-                            }),
-                        }).addTo(map);
-
-                        marker.bindPopup(`
-                                <strong>${location.icon} ${location.type}${index === 0 ? " (Prioritas Tertinggi)" : ""}</strong><br>
-                                <small>${extractLocationName(location.display_name)}</small><br>
-                                <small>Jarak: ${location.distance.toFixed(2)} km</small><br>
-                                <small>Arah: ${location.direction} (${location.bearing.toFixed(1)}°)</small>
-                            `);
-                        pmiMarkers.push(marker);
-                    } catch (error) {
-                        console.error("Marker error:", error);
-                    }
-                });
-
-                // Populate location selector with enhanced grouping
-                populateLocationSelector(finalResults);
-
-                // Group results by distance for analysis
-                const distanceGroups = groupLocationsByDistance(finalResults);
-                const groupSummary = Object.entries(distanceGroups)
-                    .filter(([_, locations]) => locations.length > 0)
-                    .map(([groupName, locations]) => {
-                        const groupLabels = {
-                            very_close: "sangat dekat",
-                            close: "dekat",
-                            moderate: "sedang",
-                            far: "jauh",
-                            very_far: "sangat jauh",
-                        };
-                        return `${locations.length} ${groupLabels[groupName]}`;
-                    })
-                    .join(", ");
-
-                // Send data to Livewire with enhanced information
-                const locationData = {
-                    lokasi_pengguna: `${userLat.toFixed(6)}, ${userLon.toFixed(6)}`,
-                    locations: finalResults,
-                    search_radius: MAX_SEARCH_RADIUS_KM,
-                    distance_groups: distanceGroups,
-                    haversine_used: true,
-                };
-
-                console.log(
-                    "Sending enhanced location data to Livewire:",
-                    locationData,
-                );
-
-                // Dispatch event ke Livewire
-                try {
-                    let eventSent = false;
-
-                    // Method 1: Livewire v3 style
-                    if (
-                        window.Livewire &&
-                        typeof Livewire.dispatch === "function"
-                    ) {
-                        Livewire.dispatch("lokasiDiupdate", locationData);
-                        console.log(
-                            "✓ Enhanced data sent via Livewire.dispatch (v3)",
-                        );
-                        eventSent = true;
-                    }
-
-                    // Method 2: Livewire v2 style
-                    if (
-                        !eventSent &&
-                        window.livewire &&
-                        typeof window.livewire.emit === "function"
-                    ) {
-                        window.livewire.emit("lokasiDiupdate", locationData);
-                        console.log(
-                            "✓ Enhanced data sent via livewire.emit (v2)",
-                        );
-                        eventSent = true;
-                    }
-
-                    // Method 3: Fallback Livewire v2/v3
-                    if (
-                        !eventSent &&
-                        window.Livewire &&
-                        typeof Livewire.emit === "function"
-                    ) {
-                        Livewire.emit("lokasiDiupdate", locationData);
-                        console.log(
-                            "✓ Enhanced data sent via Livewire.emit (fallback)",
-                        );
-                        eventSent = true;
-                    }
-
-                    // Method 4: Global event dispatch
-                    if (!eventSent) {
-                        window.dispatchEvent(
-                            new CustomEvent("livewire:lokasiDiupdate", {
-                                detail: locationData,
-                            }),
-                        );
-                        console.log(
-                            "✓ Enhanced data sent via custom event (fallback)",
-                        );
-                        eventSent = true;
-                    }
-
-                    if (!eventSent) {
-                        console.error(
-                            "❌ No Livewire dispatch method available",
-                        );
-                    }
-                } catch (error) {
-                    console.error(
-                        "Error sending enhanced data to Livewire:",
-                        error,
-                    );
-                    showStatus("Gagal mengirim data ke server", "error");
-                }
-
-                // Group results by type for enhanced status message
-                const typeCount = finalResults.reduce((acc, loc) => {
-                    acc[loc.type] = (acc[loc.type] || 0) + 1;
-                    return acc;
-                }, {});
-
-                const typeSummary = Object.entries(typeCount)
-                    .map(([type, count]) => `${count} ${type}`)
-                    .join(", ");
-
-                showStatus(
-                    `Ditemukan ${finalResults.length} lokasi (${typeSummary}) dalam radius ${MAX_SEARCH_RADIUS_KM}km. Distribusi jarak: ${groupSummary}. Diurutkan berdasarkan prioritas & jarak Haversine.`,
-                    "success",
-                );
-            })
-            .catch((error) => {
-                console.error("Enhanced search error:", error);
-                showStatus("Gagal mencari lokasi donor darah", "error");
-            });
+            }
+        }
     }
 
     // Get current location
@@ -928,13 +783,12 @@
             return;
         }
 
-        if (!isMapReady) {
+        if (!map) {
             initMap();
             setTimeout(() => getCurrentLocation(), 1000);
             return;
         }
 
-        // Update button
         if (btn) btn.disabled = true;
         if (btnText) btnText.textContent = "Mengambil...";
         showStatus("Mengambil lokasi dengan presisi tinggi...", "loading");
@@ -946,12 +800,11 @@
                     position.coords.longitude,
                 );
 
-                // Reset button
                 if (btn) btn.disabled = false;
                 if (btnText) btnText.textContent = "Ambil Lokasi";
 
                 console.log(
-                    `User location set: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)} (accuracy: ${position.coords.accuracy}m)`,
+                    `User location: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)} (accuracy: ${position.coords.accuracy}m)`,
                 );
             },
             (error) => {
@@ -976,156 +829,23 @@
 
                 showStatus(message, "error");
 
-                // Reset button
                 if (btn) btn.disabled = false;
                 if (btnText) btnText.textContent = "Ambil Lokasi";
             },
             {
                 enableHighAccuracy: true,
-                timeout: 15000, // Increased timeout for better accuracy
+                timeout: 15000,
                 maximumAge: 300000,
             },
         );
     };
 
-    // Additional utility functions for enhanced functionality
-
-    // Calculate the center point (centroid) of multiple locations
-    window.calculateLocationsCentroid = function (locations) {
-        if (!locations || locations.length === 0) return null;
-
-        let totalLat = 0;
-        let totalLon = 0;
-
-        locations.forEach((location) => {
-            totalLat += location.lat;
-            totalLon += location.lon;
-        });
-
-        return {
-            lat: totalLat / locations.length,
-            lon: totalLon / locations.length,
-        };
-    };
-
-    // Find the optimal location (closest to all other locations)
-    window.findOptimalLocation = function (locations, userLat, userLon) {
-        if (!locations || locations.length === 0) return null;
-
-        let bestLocation = null;
-        let minTotalDistance = Infinity;
-
-        locations.forEach((location) => {
-            let totalDistance = 0;
-
-            // Calculate distance to user
-            totalDistance += calculateHaversineDistance(
-                userLat,
-                userLon,
-                location.lat,
-                location.lon,
-            );
-
-            // Calculate distance to all other locations
-            locations.forEach((otherLocation) => {
-                if (location.place_id !== otherLocation.place_id) {
-                    totalDistance += calculateHaversineDistance(
-                        location.lat,
-                        location.lon,
-                        otherLocation.lat,
-                        otherLocation.lon,
-                    );
-                }
-            });
-
-            if (totalDistance < minTotalDistance) {
-                minTotalDistance = totalDistance;
-                bestLocation = location;
-            }
-        });
-
-        return bestLocation;
-    };
-
-    // Get locations within a specific radius
-    window.getLocationsWithinRadius = function (
-        locations,
-        centerLat,
-        centerLon,
-        radiusKm,
-    ) {
-        if (!locations) return [];
-
-        return locations.filter((location) => {
-            const distance = calculateHaversineDistance(
-                centerLat,
-                centerLon,
-                location.lat,
-                location.lon,
-            );
-            return distance <= radiusKm;
-        });
-    };
-
-    // Export location data to JSON (for debugging or external use)
-    window.exportLocationData = function () {
-        const data = {
-            userCoordinates: userCoordinates,
-            availableLocations: availableLocations,
-            searchRadius: MAX_SEARCH_RADIUS_KM,
-            timestamp: new Date().toISOString(),
-            haversineFormula:
-                "Enhanced implementation with bearing calculation",
-        };
-
-        console.log("Location data export:", data);
-        return data;
-    };
-
-    // Performance monitoring for Haversine calculations
-    window.benchmarkHaversine = function (iterations = 10000) {
-        const startTime = performance.now();
-
-        for (let i = 0; i < iterations; i++) {
-            calculateHaversineDistance(
-                -5.147665 + (Math.random() - 0.5) * 0.1,
-                119.432732 + (Math.random() - 0.5) * 0.1,
-                -5.147665 + (Math.random() - 0.5) * 0.1,
-                119.432732 + (Math.random() - 0.5) * 0.1,
-            );
-        }
-
-        const endTime = performance.now();
-        const duration = endTime - startTime;
-
-        console.log(
-            `Haversine benchmark: ${iterations} calculations in ${duration.toFixed(2)}ms (${(duration / iterations).toFixed(4)}ms per calculation)`,
-        );
-        return {
-            iterations: iterations,
-            totalTime: duration,
-            averageTime: duration / iterations,
-        };
-    };
-
-    // Initialize map when page loads
+    // Initialize when page loads
     document.addEventListener("DOMContentLoaded", function () {
         initMap();
+        console.log("Enhanced Location Finder initialized");
         console.log(
-            "Enhanced Location Finder with Haversine Formula initialized",
-        );
-        console.log(
-            `Configuration: Max radius ${MAX_SEARCH_RADIUS_KM}km, Max results ${MAX_RESULTS}, Min distance threshold ${MIN_DISTANCE_THRESHOLD}km`,
+            `Config: Max radius ${CONFIG.MAX_SEARCH_RADIUS_KM}km, Max results ${CONFIG.MAX_RESULTS}`,
         );
     });
-
-    // Debug information
-    console.log("🌍 Enhanced Location Finder Features:");
-    console.log("✓ Haversine formula for accurate distance calculation");
-    console.log("✓ Bearing and compass direction calculation");
-    console.log("✓ Multi-criteria sorting (priority, distance, name)");
-    console.log("✓ Distance-based filtering and grouping");
-    console.log("✓ Duplicate location detection and removal");
-    console.log("✓ Performance optimized with configurable limits");
-    console.log("✓ Enhanced location type detection and prioritization");
 })();

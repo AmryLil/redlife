@@ -1,5 +1,6 @@
 <?php
 
+// 1. Perbaikan Model DonationLocation
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,8 +10,22 @@ class DonationLocation extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['location_name', 'location_detail', 'address', 'url_address', 'cover', 'city', 'latitude',
-        'longitude'];
+    // Gunakan struktur fillable yang sudah ada
+    protected $fillable = [
+        'location_name',
+        'location_detail',
+        'address',
+        'url_address',
+        'cover',
+        'city',
+        'latitude',
+        'longitude'
+    ];
+
+    // Tambahkan default values jika diperlukan
+    protected $attributes = [
+        'location_detail' => 'Lokasi Donor Darah',
+    ];
 
     public function donations()
     {
@@ -31,9 +46,6 @@ class DonationLocation extends Model
         );
     }
 
-    /**
-     * Haversine formula to calculate distance between two points
-     */
     private function haversineDistance($lat1, $lon1, $lat2, $lon2): float
     {
         $R    = 6371;  // Radius bumi dalam kilometer
@@ -49,25 +61,16 @@ class DonationLocation extends Model
         return $R * $c;
     }
 
-    /**
-     * Scope to get active locations only
-     */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
-    /**
-     * Scope to get locations by city
-     */
     public function scopeByCity($query, $city)
     {
         return $query->where('city', $city);
     }
 
-    /**
-     * Get locations ordered by distance from given coordinates
-     */
     public static function getNearestLocations($latitude, $longitude, $limit = null)
     {
         $locations = self::active()
@@ -84,4 +87,24 @@ class DonationLocation extends Model
 
         return $limit ? $sorted->take($limit) : $sorted;
     }
+
+    // TAMBAHAN: Method untuk mencari atau membuat lokasi baru
+    public static function findOrCreateByPlaceId($placeId, $data = [])
+    {
+        // Karena tidak ada field place_id, kita bisa gunakan url_address untuk menyimpan place_id
+        return self::firstOrCreate(
+            ['url_address' => $placeId],
+            $data
+        );
+    }
+
+    public static function findOrCreateByName($locationName, $data = [])
+    {
+        return self::firstOrCreate(
+            ['location_name' => $locationName],
+            array_merge($data, ['location_name' => $locationName])
+        );
+    }
 }
+
+// 2. Perbaikan Method Submit di Class Donations
