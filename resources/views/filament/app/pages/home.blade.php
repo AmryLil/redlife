@@ -2,13 +2,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<title>{{ $title ?? 'Page Title' }}</title>
+<title>{{ $title ?? 'Judul Halaman' }}</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Boldonse&display=swap" rel="stylesheet">
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.bunny.net">
 <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-<script src="https://cdn.tailwindcss.com"></script>
 
 <style>
     .fi-header-heading {
@@ -29,6 +28,40 @@
         margin: 0 !important;
         padding: 0 !important;
     }
+
+    @keyframes fadeInDown {
+        0% {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        0% {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in-down {
+        animation: fadeInDown 1s ease-out forwards;
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 1s ease-out 0.5s forwards;
+        opacity: 0;
+        /* Start with opacity 0 to prevent flash */
+    }
 </style>
 
 <!-- Scripts -->
@@ -39,17 +72,34 @@
 
 <div class="w-screen">
     <!-- Banner Section -->
-    <section>
-        <div class="relative w-full h-64 md:h-[610px] bg-gray-900">
-            <img src="https://img.freepik.com/free-photo/national-blood-donation-month-cancer-patients-month-september_185193-164899.jpg?t=st=1744221105~exp=1744224705~hmac=b98569596e4b2490c3c56cedb235b6dea07aba8b2ea2970b465dbf2f85b1c6ba&w=1800"
-                alt="Blood donation illustration" class="w-full h-full object-cover object-[0px_10%] opacity-75" />
+    <section class="relative h-[610px] w-full">
+        <div class="absolute inset-0 bg-gray-900">
+            <img src="{{ asset('images/home_banner.png') }}" alt="Ilustrasi donor darah artistik"
+                class="h-full w-full  opacity-60 object-cover object-[0px_0%]" />
+            {{-- <div class="absolute inset-0 bg-gradient-to-t  from-black/60 via-transparent to-black/20"></div> --}}
+        </div>
 
+        <div class="relative z-10 flex h-full w-full flex-col items-start justify-center   md:px-32">
+            <div class="animate-fade-in-down uppercase">
+                <h1 class="text-8xl font-extrabold text-white">
+                    Setetes Darah
+                    <span class="mt-2 block text-6xl">Sejuta Harapan
+                    </span>
+                </h1>
+            </div>
+            <a href="/app/donations"
+                class="mt-12 animate-fade-in-up rounded-lg bg-red-100 px-8 py-4 text-xl font-bold text-red-700 shadow-lg transition-transform duration-300 ease-in-out hover:scale-105">
+                Donor Sekarang
+            </a>
         </div>
     </section>
 
+
+
     <!-- Why Donate Blood Section -->
     <section class="px-4 md:px-32 mt-10">
-        <h1 class="w-full text-center font-bold text-2xl md:text-3xl text-red-700 mb-6">Why Should You Donate Blood?
+        <h1 class="w-full text-center font-bold text-2xl md:text-3xl text-red-700 mb-6">Mengapa Anda Harus Mendonorkan
+            Darah?
         </h1>
 
         <div class="flex flex-col md:flex-row gap-4">
@@ -62,8 +112,8 @@
                         fill="#C10101" />
                 </svg>
                 <p class="text-sm md:text-base">
-                    Each unit of blood you donate can help more than one patient in need, such as accident victims,
-                    surgery patients, or those with certain diseases.
+                    Setiap satuan darah yang Anda donorkan dapat membantu lebih dari satu pasien yang membutuhkan,
+                    seperti korban kecelakaan, pasien operasi, atau mereka yang memiliki penyakit tertentu.
                 </p>
             </div>
 
@@ -76,7 +126,8 @@
                         fill="#C10101" />
                 </svg>
                 <p class="text-sm md:text-base mt-2">
-                    For those with high blood pressure, regular blood donation can help keep it stable.
+                    Bagi mereka yang memiliki tekanan darah tinggi, donor darah secara teratur dapat membantu menjaga
+                    kestabilannya.
                 </p>
             </div>
         </div>
@@ -94,8 +145,8 @@
                         fill="#C10101" />
                 </svg>
                 <p class="text-sm md:text-base">
-                    Donating blood helps reduce excess iron levels in the blood, lowering the risk of heart disease and
-                    stroke.
+                    Donor darah membantu mengurangi kadar zat besi berlebih dalam darah, sehingga menurunkan risiko
+                    penyakit jantung dan stroke.
                 </p>
             </div>
 
@@ -117,24 +168,90 @@
                         fill="#C10101" />
                 </svg>
                 <p class="text-sm md:text-base mt-4">
-                    After you donate, your body quickly produces new blood cells to replace the lost ones, keeping your
-                    blood fresh and healthy.
+                    Setelah Anda mendonorkan darah, tubuh Anda dengan cepat memproduksi sel darah baru untuk
+                    menggantikan yang hilang, menjaga darah Anda tetap segar dan sehat.
                 </p>
             </div>
         </div>
     </section>
 
+    <section class="relative px-4 md:px-32 py-14 mt-10 gradient-custom overflow-hidden">
+        <div class=" relative z-10  flex items-center">
+            <div class="grid lg:grid-cols-2 gap-12 items-center w-full">
+                <!-- Text Content -->
+                <div class=" lg:text-left space-y-8">
+                    <div class="space-y-6">
+                        <h1 class="text-5xl lg:text-5xl font-bold  text-white leading-tight">
+                            Jadilah
 
+                            Pahlawan
+                            Hari Ini
+                        </h1>
+
+                        <p class="text-lg  text-red-50 leading-relaxed max-w-2xl">
+                            Satu keputusan Anda untuk mendonor darah bisa menyelamatkan hingga
+                            <span class="font-bold text-white">3 nyawa</span>.
+                            Bergabunglah dengan ribuan pendonor yang telah merasakan kebahagiaan berbagi kehidupan.
+                        </p>
+                    </div>
+
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="/app/donations">
+                            <button
+                                class="group relative bg-white text-red-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-red-50 transition-all duration-300 shadow-2xl hover:shadow-white/20 hover:scale-105">
+                                <span class="relative z-10">Daftar Donor Sekarang</span>
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-r from-white to-red-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                </div>
+                            </button>
+                        </a>
+
+                        <a href="/app/search-location">
+                            <button
+                                class="group relative bg-transparent border-2 border-white text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white hover:text-red-600 transition-all duration-300 shadow-lg hover:shadow-white/20 hover:scale-105">
+                                <span class="relative z-10">Cari Lokasi Terdekat</span>
+                            </button>
+                        </a>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-3 gap-6 pt-8">
+                        <div class="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+                            <div class="text-xl  font-black text-white mb-2">24/7</div>
+                            <p class="text-red-100 text-sm">Layanan Darurat</p>
+                        </div>
+                        <div class="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+                            <div class="text-xl  font-black text-white mb-2">100%</div>
+                            <p class="text-red-100 text-sm">Aman & Steril</p>
+                        </div>
+                        <div class="text-center p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+                            <div class="text-xl  font-black text-white mb-2">Gratis</div>
+                            <p class="text-red-100 text-sm">Pemeriksaan Kesehatan</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Content -->
+                <div class="relative flex justify-center  lg:justify-end rounded-xl overflow-hidden">
+                    <img class="h-full w-full" src="{{ asset('images/banner_donor.png') }}" alt="">
+                </div>
+            </div>
+        </div>
+
+
+    </section>
 
     <!-- Donation Process Section -->
     <section class="mt-8 px-4 md:px-32">
-        <h1 class="w-full text-center font-bold text-2xl md:text-3xl text-red-700">How Does the Blood Donation Process
-            Work?</h1>
+        <h1 class="w-full text-center font-bold text-2xl md:text-3xl text-red-700">Bagaimana Proses Donor Darah
+            Bekerja?
+        </h1>
 
         <!-- Timeline Steps -->
         <ol class="items-center sm:flex mt-5 translate-x-16 p-4 w-full justify-center">
             <!-- Step 1 -->
-            <li class="relative mb-6 sm:mb-0">
+            <li class="relative mb-6 sm:mb-0 h-32">
                 <div class="flex items-center">
                     <div
                         class="z-10 flex items-center justify-center w-8 h-8 bg-red-600 rounded-full ring-0 ring-white sm:ring-8 sm:ring-red-300 shrink-0">
@@ -143,14 +260,14 @@
                     <div class="hidden sm:flex w-full bg-gray-200 h-0.5"></div>
                 </div>
                 <div class="mt-3 sm:pe-8 -translate-x-8 space-y-2">
-                    <h3 class="text-lg font-bold text-red-600">Registration</h3>
-                    <p class="text-sm md:text-base">Fill out the donor registration form and provide.
+                    <h3 class="text-lg font-bold text-red-600">Pendaftaran</h3>
+                    <p class="text-sm md:text-base">Isi formulir pendaftaran donor dan berikan data yang diperlukan.
                     </p>
                 </div>
             </li>
 
             <!-- Step 2 -->
-            <li class="relative mb-6 sm:mb-0">
+            <li class="relative mb-6  h-32 sm:mb-0">
                 <div class="flex items-center">
                     <div
                         class="z-10 flex items-center justify-center w-8 h-8 bg-red-600 rounded-full ring-0 ring-white sm:ring-8 sm:ring-red-300 shrink-0">
@@ -159,14 +276,16 @@
                     <div class="hidden sm:flex w-full bg-gray-200 h-0.5"></div>
                 </div>
                 <div class="mt-3 sm:pe-8 -translate-x-8 space-y-2">
-                    <h3 class="text-lg font-bold text-red-600">Medical Screening</h3>
-                    <p class="text-sm md:text-base">Undergo a quick health check to ensure you’re eligible to donate.
+                    <h3 class="text-lg font-bold text-red-600">Skrining Medis</h3>
+                    <p class="text-sm md:text-base">Lakukan pemeriksaan kesehatan singkat untuk memastikan Anda
+                        memenuhi
+                        syarat donor.
                     </p>
                 </div>
             </li>
 
             <!-- Step 3 -->
-            <li class="relative mb-6 sm:mb-0">
+            <li class="relative mb-6 sm:mb-0 h-32">
                 <div class="flex items-center">
                     <div
                         class="z-10 flex items-center justify-center w-8 h-8 bg-red-600 rounded-full ring-0 ring-white sm:ring-8 sm:ring-red-300 shrink-0">
@@ -175,14 +294,15 @@
                     <div class="hidden sm:flex w-full bg-gray-200 h-0.5"></div>
                 </div>
                 <div class="mt-3 sm:pe-8 -translate-x-8 space-y-2">
-                    <h3 class="text-lg font-bold text-red-600">Donation</h3>
-                    <p class="text-sm md:text-base">A healthcare professional will draw blood in a clean and safe
-                        environment.</p>
+                    <h3 class="text-lg font-bold text-red-600">Donor Darah</h3>
+                    <p class="text-sm md:text-base">Tenaga medis akan mengambil darah Anda di lingkungan yang bersih
+                        dan
+                        aman.</p>
                 </div>
             </li>
 
             <!-- Step 4 -->
-            <li class="relative mb-6 sm:mb-0">
+            <li class="relative mb-6 sm:mb-0 h-32">
                 <div class="flex items-center">
                     <div
                         class="z-10 flex items-center justify-center w-8 h-8 bg-red-600 rounded-full ring-0 ring-white sm:ring-8 sm:ring-red-300 shrink-0">
@@ -191,14 +311,14 @@
                     <div class="hidden sm:flex w-full bg-gray-200 h-0.5"></div>
                 </div>
                 <div class="mt-3 sm:pe-8 -translate-x-8 space-y-2">
-                    <h3 class="text-lg font-bold text-red-600">Refreshments</h3>
-                    <p class="text-sm md:text-base">After donating, enjoy snacks and a short rest to help your body
-                        recover.</p>
+                    <h3 class="text-lg font-bold text-red-600">Hidangan Ringan</h3>
+                    <p class="text-sm md:text-base">Setelah donor, nikmati camilan dan istirahat singkat untuk membantu
+                        tubuh Anda pulih.</p>
                 </div>
             </li>
 
             <!-- Step 5 -->
-            <li class="relative mb-6 sm:mb-0">
+            <li class="relative mb-6 sm:mb-0 h-32">
                 <div class="flex items-center">
                     <div
                         class="z-10 flex items-center justify-center w-8 h-8 bg-red-600 rounded-full ring-0 ring-white sm:ring-8 sm:ring-red-300 shrink-0">
@@ -206,13 +326,13 @@
                     </div>
                 </div>
                 <div class="mt-3 sm:pe-8 -translate-x-8 space-y-2">
-                    <h3 class="text-lg font-bold text-red-600">Post-Donation Care</h3>
-                    <p class="text-sm md:text-base">Follow any guidelines given by staff and schedule your next
-                        donation.</p>
+                    <h3 class="text-lg font-bold text-red-600">Pasca Donor</h3>
+                    <p class="text-sm md:text-base">Ikuti petunjuk dari staf dan jadwalkan donor berikutnya.</p>
                 </div>
             </li>
         </ol>
     </section>
+
 
     <!-- Footer (Custom Component) -->
     <x-footer></x-footer>

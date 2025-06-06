@@ -451,15 +451,25 @@ class Donations extends Page implements HasForms
         }
 
         try {
-            // PERBAIKAN: Buat lokasi dengan data yang ada
-            $locationName = $namaLokasi ?: 'PMI - ' . date('Y-m-d H:i:s');
+            // Gunakan helper untuk extract info lokasi
+            $locationInfo = $this->extractLocationInfo(
+                json_decode($this->selectedLocationData, true) ?? []
+            );
+
+            $locationName = $locationInfo['location_name'] ?? $namaLokasi ?? 'PMI - ' . date('Y-m-d H:i:s');
+            $locationFix  = explode(',', $locationName)[0];
+            $address      = explode(',', $locationName, 2)[1] ?? '';
 
             $donationLocation = DonationLocation::firstOrCreate(
-                ['location_name' => $locationName],
+                ['location_name' => $locationFix],
                 [
-                    'location_detail' => 'Lokasi Donor Darah',
-                    'address'         => $locationName,
+                    'location_detail' => $locationInfo['location_detail'] ?? 'Ruangan Donor Darah',
+                    'address'         => ltrim($address),
                     'url_address'     => '',  // Simpan ID di url_address
+                    'cover'           => '',  // Simpan ID di url_address
+                    'city'            => $locationInfo['city'] ?? 'Unknown',
+                    'latitude'        => $locationInfo['latitude'] ?? null,
+                    'longitude'       => $locationInfo['longitude'] ?? null,
                 ]
             );
 

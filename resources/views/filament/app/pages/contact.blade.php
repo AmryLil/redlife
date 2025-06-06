@@ -1,6 +1,5 @@
 <div>
     <link href="https://fonts.googleapis.com/css2?family=Boldonse&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .fi-main {
             margin: 0 !important;

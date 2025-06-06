@@ -34,9 +34,7 @@
         return false;
     }
 
-    // PERBAIKAN: Fungsi khusus untuk update Filament form field
     function updateFilamentField(wireModel, value) {
-        // Cari input dengan wire:model yang sesuai
         const selectors = [
             `input[wire\\:model="${wireModel}"]`,
             `input[wire\\:model\\.defer="${wireModel}"]`,
@@ -49,7 +47,6 @@
             const element = document.querySelector(selector);
             if (element) {
                 element.value = value;
-                // Trigger berbagai event untuk memastikan Livewire mendeteksi perubahan
                 element.dispatchEvent(new Event("input", { bubbles: true }));
                 element.dispatchEvent(new Event("change", { bubbles: true }));
                 element.dispatchEvent(new Event("blur", { bubbles: true }));
@@ -85,17 +82,21 @@
         }
     }
 
-    // Calculate distance and bearing using Haversine formula
+    // Haversine formula untuk menghitung jarak dan bearing
+    let calculateDistanceCallCount = 0;
+
     function calculateDistanceWithBearing(lat1, lon1, lat2, lon2) {
+        calculateDistanceCallCount++; // tambah counter tiap panggil fungsi
+
         const toRadians = (degrees) => degrees * (Math.PI / 180);
         const toDegrees = (radians) => radians * (180 / Math.PI);
 
-        // Distance calculation
         const lat1Rad = toRadians(lat1);
         const lat2Rad = toRadians(lat2);
         const deltaLat = toRadians(lat2 - lat1);
         const deltaLon = toRadians(lon2 - lon1);
 
+        // Haversine formula untuk jarak
         const a =
             Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
             Math.cos(lat1Rad) *
@@ -115,14 +116,24 @@
         let bearing = toDegrees(Math.atan2(y, x));
         bearing = (bearing + 360) % 360;
 
-        return {
+        const result = {
             distance: distance,
             bearing: bearing,
             direction: getCompassDirection(bearing),
         };
+
+        // Log hasil perhitungan Haversine dengan index call
+
+        console.log(`Call #${calculateDistanceCallCount} - Haversine calculation:
+        From: ${lat1.toFixed(6)}, ${lon1.toFixed(6)}
+        To: ${lat2.toFixed(6)}, ${lon2.toFixed(6)}
+        Distance: ${distance.toFixed(3)} km
+        Bearing: ${bearing.toFixed(1)}°
+        Direction: ${result.direction}`);
+
+        return result;
     }
 
-    // Get compass direction from bearing
     function getCompassDirection(bearing) {
         const directions = [
             "Utara",
@@ -138,35 +149,6 @@
         return directions[index];
     }
 
-    // Get location type and details
-    function getLocationType(name) {
-        const lowerName = name.toLowerCase();
-
-        if (lowerName.includes("pmi") || lowerName.includes("palang merah")) {
-            return { type: "PMI", icon: "🏥", color: "#dc2626", priority: 1 };
-        }
-        if (lowerName.includes("utd") || lowerName.includes("unit transfusi")) {
-            return { type: "UTD", icon: "🩸", color: "#7c2d12", priority: 2 };
-        }
-        if (
-            lowerName.includes("rumah sakit") ||
-            lowerName.includes("rs ") ||
-            lowerName.includes("hospital")
-        ) {
-            return { type: "RS", icon: "🏨", color: "#059669", priority: 3 };
-        }
-        if (lowerName.includes("klinik")) {
-            return {
-                type: "Klinik",
-                icon: "🏥",
-                color: "#0891b2",
-                priority: 4,
-            };
-        }
-        return { type: "Kesehatan", icon: "⚕️", color: "#6366f1", priority: 5 };
-    }
-
-    // Extract clean location name
     function extractLocationName(displayName) {
         const parts = displayName.split(",");
         if (parts.length >= 2) {
@@ -177,7 +159,8 @@
             : displayName;
     }
 
-    // Process and filter locations
+    // Process locations - disederhanakan tanpa pembagian tipe
+    // Process locations - disederhanakan tanpa pembagian tipe
     function processLocations(locations, userLat, userLon) {
         const processed = [];
         const processedCoordinates = new Set();
@@ -196,25 +179,11 @@
             );
             if (distanceData.distance > CONFIG.MAX_SEARCH_RADIUS_KM) return;
 
-            // Check for duplicates
+            // Check for duplicates - MASALAH DI SINI
             const coordKey = `${lat.toFixed(4)},${lon.toFixed(4)}`;
-            let isDuplicate = false;
-            for (const existing of processed) {
-                const existingDistance = calculateDistanceWithBearing(
-                    lat,
-                    lon,
-                    existing.lat,
-                    existing.lon,
-                );
-                if (existingDistance.distance < CONFIG.MIN_DISTANCE_THRESHOLD) {
-                    isDuplicate = true;
-                    break;
-                }
-            }
 
-            if (!isDuplicate && !processedCoordinates.has(coordKey)) {
+            if (!processedCoordinates.has(coordKey)) {
                 processedCoordinates.add(coordKey);
-                const locationInfo = getLocationType(location.display_name);
 
                 processed.push({
                     place_id: String(location.place_id),
@@ -225,24 +194,19 @@
                     distance: distanceData.distance,
                     bearing: distanceData.bearing,
                     direction: distanceData.direction,
-                    type: locationInfo.type,
-                    icon: locationInfo.icon,
-                    color: locationInfo.color,
-                    priority: locationInfo.priority,
+                    type: "Donor Darah",
+                    icon: "🩸",
+                    color: "#dc2626",
+                    priority: 1,
                 });
             }
         });
 
-        // Sort by priority then distance
         return processed
-            .sort((a, b) => {
-                if (a.priority !== b.priority) return a.priority - b.priority;
-                return a.distance - b.distance;
-            })
+            .sort((a, b) => a.distance - b.distance)
             .slice(0, CONFIG.MAX_RESULTS);
     }
 
-    // Group locations by distance
     function groupLocationsByDistance(locations) {
         const groups = {
             very_close: [], // 0-2 km
@@ -264,11 +228,9 @@
         return groups;
     }
 
-    // Get route using OSRM
     async function getRoute(startLat, startLon, endLat, endLon) {
         try {
             const url = `https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson&steps=true`;
-
             showStatus("Mencari rute terbaik...", "loading");
 
             const response = await fetch(url);
@@ -293,18 +255,15 @@
         }
     }
 
-    // Format duration
     function formatDuration(seconds) {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
-
         if (hours > 0) {
             return `${hours} jam ${minutes} menit`;
         }
         return `${minutes} menit`;
     }
 
-    // Draw route on map
     function drawRoute(routeData) {
         if (routeLayer && map.hasLayer(routeLayer)) {
             map.removeLayer(routeLayer);
@@ -321,7 +280,6 @@
             },
         }).addTo(map);
 
-        // Fit map to show route
         const group = new L.featureGroup([
             routeLayer,
             userMarker,
@@ -344,7 +302,6 @@
         };
     }
 
-    // Initialize map
     function initMap() {
         if (!getElement("map")) return;
 
@@ -360,7 +317,6 @@
         console.log("Map initialized");
     }
 
-    // Set user location
     function setUserLocation(lat, lon) {
         if (!map) return;
 
@@ -381,7 +337,6 @@
         findDonorLocations(lat, lon);
     }
 
-    // Find donor locations
     function findDonorLocations(userLat, userLon) {
         showStatus("Mencari lokasi donor darah...", "loading");
 
@@ -396,11 +351,12 @@
         if (selector) selector.style.display = "none";
         if (info) info.style.display = "none";
 
+        // Simplified search queries
         const queries = [
             "PMI+Makassar",
             "UTD+Makassar",
             "Unit+Transfusi+Darah+Makassar",
-            "Rumah+Sakit+Makassar",
+            "Rumah+Sakit+Umum+Makassar",
             "RS+Makassar",
             "Palang+Merah+Indonesia+Makassar",
         ];
@@ -437,7 +393,7 @@
 
                 availableLocations = processedLocations;
 
-                // Add markers with different colors
+                // Add markers with unified style
                 processedLocations.forEach((location) => {
                     const marker = L.marker([location.lat, location.lon], {
                         icon: L.divIcon({
@@ -465,17 +421,8 @@
                         groupLocationsByDistance(processedLocations),
                 });
 
-                const typeCount = processedLocations.reduce((acc, loc) => {
-                    acc[loc.type] = (acc[loc.type] || 0) + 1;
-                    return acc;
-                }, {});
-
-                const typeSummary = Object.entries(typeCount)
-                    .map(([type, count]) => `${count} ${type}`)
-                    .join(", ");
-
                 showStatus(
-                    `Ditemukan ${processedLocations.length} lokasi (${typeSummary})`,
+                    `Ditemukan ${processedLocations.length} lokasi donor darah`,
                     "success",
                 );
             })
@@ -485,7 +432,6 @@
             });
     }
 
-    // Populate location selector with distance groups
     function populateSelector(locations) {
         const selector = getElement("selectedLocation");
         const selectorContainer = getElement("locationSelector");
@@ -506,7 +452,7 @@
                     const globalIndex = locations.indexOf(location);
                     const option = document.createElement("option");
                     option.value = globalIndex;
-                    option.textContent = `${location.icon} ${location.type} - ${location.name} (${location.distance.toFixed(2)} km ${location.direction})`;
+                    option.textContent = `${location.icon} ${location.name} (${location.distance.toFixed(2)} km ${location.direction})`;
                     groupHeader.appendChild(option);
                 });
 
@@ -527,13 +473,11 @@
         };
     }
 
-    // PERBAIKAN UTAMA: Handle location selection dengan update yang tepat ke Filament
     async function handleLocationSelection(selectedIndex) {
         const selectedLocationInfo = getElement("selectedLocationInfo");
         const locationDetails = getElement("locationDetails");
 
         if (selectedIndex === "" || selectedIndex === null) {
-            // Reset selection
             if (selectedLocationInfo)
                 selectedLocationInfo.style.display = "none";
             if (selectedMarker && map.hasLayer(selectedMarker)) {
@@ -545,12 +489,10 @@
                 routeLayer = null;
             }
 
-            // Clear semua field Filament
             updateFilamentField("data.lokasi_donor_id", "");
             updateFilamentField("data.summary_lokasi", "");
             updateFilamentField("data.selected_location_data", "");
 
-            // Kirim data kosong ke Livewire
             sendToLivewire(
                 {
                     lokasi_donor_terpilih: null,
@@ -569,7 +511,6 @@
 
         console.log("Selected location:", location);
 
-        // Remove previous markers and routes
         if (selectedMarker && map.hasLayer(selectedMarker)) {
             map.removeLayer(selectedMarker);
         }
@@ -577,7 +518,6 @@
             map.removeLayer(routeLayer);
         }
 
-        // Add selected marker
         selectedMarker = L.marker([location.lat, location.lon], {
             icon: L.divIcon({
                 html: '<div style="background-color: #ef4444; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
@@ -601,7 +541,6 @@
 
         map.setView([location.lat, location.lon], 15);
 
-        // Get route if user location available
         let routeInfo = null;
         if (userCoordinates) {
             const routeData = await getRoute(
@@ -610,22 +549,35 @@
                 location.lat,
                 location.lon,
             );
-
             if (routeData) {
                 routeInfo = drawRoute(routeData);
             }
         }
 
-        // PERBAIKAN: Siapkan data lokasi yang akan dikirim
         const locationDisplayName = location.display_name;
         const locationPlaceId = location.place_id;
 
-        // Data untuk Livewire
+        let city = "Makassar";
+        if (locationDisplayName) {
+            const parts = locationDisplayName
+                .split(",")
+                .map((part) => part.trim());
+            const cityPart = parts.find(
+                (part) =>
+                    part.toLowerCase().includes("makassar") ||
+                    part.toLowerCase().includes("sulawesi"),
+            );
+            if (cityPart) {
+                city = cityPart.replace(/^(Kota\s+|Kabupaten\s+)/i, "").trim();
+            }
+        }
+
         const selectedLocationData = {
             lokasi_donor_terpilih: {
                 jenis: location.type,
                 nama: location.name,
                 alamat: locationDisplayName,
+                kota: city,
                 koordinat: `${location.lat.toFixed(6)}, ${location.lon.toFixed(6)}`,
                 jarak: location.distance.toFixed(2),
                 arah: location.direction,
@@ -635,6 +587,8 @@
                 priority: location.priority,
                 lat: location.lat,
                 lon: location.lon,
+                latitude: location.lat,
+                longitude: location.lon,
                 route_info: routeInfo
                     ? {
                           distance: routeInfo.distance,
@@ -645,7 +599,6 @@
             },
         };
 
-        // PERBAIKAN: Update field Filament secara langsung
         updateFilamentField("data.lokasi_donor_id", locationPlaceId);
         updateFilamentField("data.summary_lokasi", locationDisplayName);
         updateFilamentField(
@@ -653,34 +606,274 @@
             JSON.stringify(selectedLocationData),
         );
 
-        // PERBAIKAN: Update field khusus untuk step 3 (ringkasan)
         setElementValue("lokasi_terpilih", locationDisplayName);
 
-        // Show detailed location info
+        // Ganti bagian locationDetails.innerHTML di dalam function handleLocationSelection
+        // Mulai dari baris sekitar 400-an dalam code asli
+
         if (selectedLocationInfo && locationDetails) {
             let routeHtml = "";
             if (routeInfo) {
                 routeHtml = `
-                    <div style="margin: 8px 0; padding: 8px; background-color: #f0f9ff; border-left: 4px solid #3b82f6; border-radius: 4px;">
-                        <strong>🛣️ Informasi Rute:</strong><br>
-                        <div style="margin-top: 4px;"><strong>Jarak Rute:</strong> ${routeInfo.distance} km</div>
-                        <div><strong>Estimasi Waktu:</strong> ${routeInfo.duration}</div>
+            <div class="route-info-card">
+                <div class="route-header">
+                    <span class="route-icon">🛣️</span>
+                    <span class="route-title">Informasi Rute</span>
+                </div>
+                <div class="route-details">
+                    <div class="route-item">
+                        <span class="route-label">📏 Jarak Rute:</span>
+                        <span class="route-value">${routeInfo.distance} km</span>
                     </div>
-                `;
+                    <div class="route-item">
+                        <span class="route-label">⏱️ Estimasi Waktu:</span>
+                        <span class="route-value">${routeInfo.duration}</span>
+                    </div>
+                </div>
+            </div>
+        `;
             }
 
             locationDetails.innerHTML = `
-                <div style="margin-bottom: 8px;"><strong>Jenis:</strong> ${location.icon} ${location.type}</div>
-                <div style="margin-bottom: 6px;"><strong>Nama:</strong> ${location.name}</div>
-                <div style="margin-bottom: 6px;"><strong>Alamat:</strong> ${location.display_name}</div>
-                <div style="margin-bottom: 6px;"><strong>Jarak Lurus:</strong> ${location.distance.toFixed(2)} km</div>
-                <div style="margin-bottom: 8px;"><strong>Arah:</strong> ${location.direction} (${location.bearing.toFixed(1)}°)</div>
-                ${routeHtml}
-            `;
+        <div class="location-card">
+            <div class="location-header">
+                <div class="location-type">
+                    <span class="type-icon">${location.icon}</span>
+                    <span class="type-text">${location.type}</span>
+                </div>
+                <div class="location-badge">
+                    <span class="distance-badge">${location.distance.toFixed(2)} km</span>
+                </div>
+            </div>
+            
+            <div class="location-body">
+                <div class="location-name">
+                    <h3>${location.name}</h3>
+                </div>
+                
+                <div class="location-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-icon">📍</div>
+                        <div class="detail-content">
+                            <div class="detail-label">Alamat</div>
+                            <div class="detail-value">${location.display_name}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-icon">📐</div>
+                        <div class="detail-content">
+                            <div class="detail-label">Jarak Lurus</div>
+                            <div class="detail-value">${location.distance.toFixed(2)} km</div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-icon">🧭</div>
+                        <div class="detail-content">
+                            <div class="detail-label">Arah</div>
+                            <div class="detail-value">${location.direction} (${location.bearing.toFixed(1)}°)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            ${routeHtml}
+        </div>
+        
+        <style>
+            .location-card {
+                background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                border: 1px solid #e2e8f0;
+                overflow: hidden;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+            
+            .location-header {
+                background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+                color: white;
+                padding: 16px 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .location-type {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .type-icon {
+                font-size: 20px;
+                filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+            }
+            
+            .type-text {
+                font-weight: 600;
+                font-size: 16px;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            }
+            
+            .distance-badge {
+                background: rgba(255, 255, 255, 0.2);
+                padding: 6px 12px;
+                border-radius: 20px;
+                font-weight: 600;
+                font-size: 14px;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+            }
+            
+            .location-body {
+                padding: 20px;
+            }
+            
+            .location-name h3 {
+                margin: 0 0 16px 0;
+                color: #1e293b;
+                font-size: 18px;
+                font-weight: 700;
+                line-height: 1.3;
+            }
+            
+            .location-details-grid {
+                display: grid;
+                gap: 16px;
+            }
+            
+            .detail-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 12px;
+                background: #f8fafc;
+                border-radius: 12px;
+                border-left: 4px solid #dc2626;
+                transition: all 0.2s ease;
+            }
+            
+            .detail-item:hover {
+                background: #f1f5f9;
+                transform: translateX(2px);
+            }
+            
+            .detail-icon {
+                font-size: 18px;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                flex-shrink: 0;
+            }
+            
+            .detail-content {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .detail-label {
+                font-size: 12px;
+                color: #64748b;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 2px;
+            }
+            
+            .detail-value {
+                color: #334155;
+                font-weight: 600;
+                font-size: 14px;
+                word-break: break-word;
+            }
+            
+            .route-info-card {
+                margin: 0 20px 20px 20px;
+                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+            }
+            
+            .route-header {
+                padding: 12px 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: white;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            .route-icon {
+                font-size: 16px;
+            }
+            
+            .route-title {
+                font-weight: 600;
+                font-size: 14px;
+            }
+            
+            .route-details {
+                padding: 16px;
+                display: grid;
+                gap: 12px;
+            }
+            
+            .route-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 12px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                backdrop-filter: blur(10px);
+            }
+            
+            .route-label {
+                color: rgba(255, 255, 255, 0.9);
+                font-size: 13px;
+                font-weight: 500;
+            }
+            
+            .route-value {
+                color: white;
+                font-weight: 700;
+                font-size: 14px;
+            }
+            
+            @media (max-width: 640px) {
+                .location-header {
+                    padding: 12px 16px;
+                }
+                
+                .location-body {
+                    padding: 16px;
+                }
+                
+                .location-name h3 {
+                    font-size: 16px;
+                }
+                
+                .detail-item {
+                    padding: 10px;
+                }
+                
+                .route-info-card {
+                    margin: 0 16px 16px 16px;
+                }
+            }
+        </style>
+    `;
             selectedLocationInfo.style.display = "block";
         }
 
-        // PERBAIKAN: Kirim data lengkap ke Livewire dengan struktur yang benar
         const livewireData = {
             lokasi_pengguna: getElement("lokasi_pengguna")
                 ? getElement("lokasi_pengguna").value
@@ -693,12 +886,9 @@
 
         console.log("Sending complete data to Livewire:", livewireData);
 
-        // Kirim ke Livewire
         sendToLivewire(livewireData, "lokasiDonorDipilih");
 
-        // PERBAIKAN: Tambahan untuk memastikan form terupdate
         setTimeout(() => {
-            // Force refresh Livewire component
             if (window.Livewire && window.Livewire.find) {
                 const component = document.querySelector("[wire\\:id]");
                 if (component && component.getAttribute("wire:id")) {
@@ -713,14 +903,12 @@
         }, 100);
     }
 
-    // PERBAIKAN: Fungsi sendToLivewire yang lebih robust
     function sendToLivewire(data, eventName = "lokasiDiupdate") {
         console.log(`Sending to Livewire (${eventName}):`, data);
 
         try {
             let eventSent = false;
 
-            // Coba berbagai cara untuk mengirim ke Livewire
             if (window.Livewire?.dispatch) {
                 window.Livewire.dispatch(eventName, data);
                 eventSent = true;
@@ -735,7 +923,6 @@
                 console.log("✓ Sent via Livewire.emit");
             }
 
-            // Fallback: coba dengan Alpine.js events
             if (!eventSent && window.Alpine) {
                 window.Alpine.store("locationData", data);
                 document.dispatchEvent(
@@ -745,7 +932,6 @@
                 eventSent = true;
             }
 
-            // Fallback terakhir: DOM event
             if (!eventSent) {
                 const event = new CustomEvent(eventName, {
                     detail: data,
@@ -758,7 +944,6 @@
         } catch (error) {
             console.error("Error sending to Livewire:", error);
 
-            // Emergency fallback: langsung update DOM
             if (eventName === "lokasiDonorDipilih" && data.summary_lokasi) {
                 const summaryField = document.querySelector(
                     'input[wire\\:model="data.summary_lokasi"]',
@@ -773,7 +958,6 @@
         }
     }
 
-    // Get current location
     window.getCurrentLocation = function () {
         const btn = getElement("locationBtn");
         const btnText = getElement("btnText");
@@ -840,10 +1024,9 @@
         );
     };
 
-    // Initialize when page loads
     document.addEventListener("DOMContentLoaded", function () {
         initMap();
-        console.log("Enhanced Location Finder initialized");
+        console.log("Simplified Location Finder initialized");
         console.log(
             `Config: Max radius ${CONFIG.MAX_SEARCH_RADIUS_KM}km, Max results ${CONFIG.MAX_RESULTS}`,
         );

@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Tabel Data Haversine dan Locations</title>
+        <style>
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                margin: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
+
+            .container {
+                background: rgba(255, 255, 255, 0.95);
+                border-radius: 20px;
+                padding: 30px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(10px);
+            }
+
+            h1 {
+                text-align: center;
+                color: #2c3e50;
+                margin-bottom: 30px;
+                font-size: 2.5em;
+                background: linear-gradient(45deg, #3498db, #9b59b6);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            .info-box {
+                background: linear-gradient(135deg, #74b9ff, #0984e3);
+                color: white;
+                padding: 20px;
+                border-radius: 15px;
+                margin-bottom: 30px;
+                box-shadow: 0 10px 30px rgba(116, 185, 255, 0.3);
+            }
+
+            .info-box h3 {
+                margin: 0 0 10px 0;
+                font-size: 1.3em;
+            }
+
+            .info-box p {
+                margin: 5px 0;
+                opacity: 0.9;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+                background: white;
+                border-radius: 15px;
+                overflow: hidden;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            }
+
+            th {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                padding: 15px 12px;
+                text-align: left;
+                font-weight: 600;
+                font-size: 0.95em;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            td {
+                padding: 12px;
+                border-bottom: 1px solid #e0e6ed;
+                vertical-align: top;
+                font-size: 0.9em;
+            }
+
+            tr:nth-child(even) {
+                background-color: #f8f9ff;
+            }
+
+            tr:hover {
+                background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+                transform: scale(1.01);
+                transition: all 0.3s ease;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .nama-tempat {
+                font-weight: 600;
+                color: #2c3e50;
+                max-width: 250px;
+                word-wrap: break-word;
+            }
+
+            .coordinates {
+                font-family: "Courier New", monospace;
+                font-size: 0.85em;
+                color: #7f8c8d;
+                background: #ecf0f1;
+                padding: 4px 8px;
+                border-radius: 6px;
+                display: inline-block;
+                margin: 2px 0;
+            }
+
+            .distance {
+                font-weight: 600;
+                color: #e74c3c;
+            }
+
+            .bearing {
+                font-weight: 600;
+                color: #f39c12;
+            }
+
+            .direction {
+                background: linear-gradient(135deg, #00b894, #00a085);
+                color: white;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 0.8em;
+                font-weight: 600;
+                text-align: center;
+                display: inline-block;
+            }
+
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-top: 30px;
+            }
+
+            .stat-card {
+                background: linear-gradient(135deg, #a8edea, #fed6e3);
+                padding: 20px;
+                border-radius: 15px;
+                text-align: center;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            .stat-number {
+                font-size: 2em;
+                font-weight: bold;
+                color: #2c3e50;
+            }
+
+            .stat-label {
+                color: #7f8c8d;
+                margin-top: 5px;
+            }
+
+            @media (max-width: 768px) {
+                .container {
+                    margin: 10px;
+                    padding: 20px;
+                }
+
+                table {
+                    font-size: 0.8em;
+                }
+
+                th,
+                td {
+                    padding: 8px 6px;
+                }
+
+                .nama-tempat {
+                    max-width: 150px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📍 Data Haversine & Lokasi Fasilitas Kesehatan</h1>
+
+            <div class="info-box">
+                <h3>📍 Lokasi Pengguna (User Location)</h3>
+                <p><strong>Koordinat:</strong> -5.148141, 119.487690</p>
+                <p><strong>Akurasi:</strong> 124 meter</p>
+                <p><strong>Lokasi:</strong> Makassar, Sulawesi Selatan</p>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Tempat</th>
+                        <th>From (User)</th>
+                        <th>To (Destination)</th>
+                        <th>Distance</th>
+                        <th>Bearing</th>
+                        <th>Direction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="nama-tempat">Markas PMI Sulawesi Selatan</td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.151718, 119.422668</span
+                            >
+                        </td>
+                        <td class="distance">7.212 km</td>
+                        <td class="bearing">266.8°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td class="nama-tempat">
+                            Markas Alternatif KSPR PMI UNM
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.182872, 119.426875</span
+                            >
+                        </td>
+                        <td class="distance">7.763 km</td>
+                        <td class="bearing">240.2°</td>
+                        <td><span class="direction">Barat Daya</span></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td class="nama-tempat">PMI Kota Makassar</td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.130530, 119.424596</span
+                            >
+                        </td>
+                        <td class="distance">7.257 km</td>
+                        <td class="bearing">285.7°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td class="nama-tempat">KSR PMI Kota Makassar</td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.130591, 119.424584</span
+                            >
+                        </td>
+                        <td class="distance">7.256 km</td>
+                        <td class="bearing">285.6°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td class="nama-tempat">TUK PMI Kota Makassar</td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.130548, 119.424501</span
+                            >
+                        </td>
+                        <td class="distance">7.266 km</td>
+                        <td class="bearing">285.6°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td class="nama-tempat">UDD PMI Kota Makassar</td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.130549, 119.424344</span
+                            >
+                        </td>
+                        <td class="distance">7.283 km</td>
+                        <td class="bearing">285.6°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td class="nama-tempat">
+                            Poliklinik PMI Kel. Pannampu
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.112972, 119.429050</span
+                            >
+                        </td>
+                        <td class="distance">7.581 km</td>
+                        <td class="bearing">301.1°</td>
+                        <td><span class="direction">Barat Laut</span></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td class="nama-tempat">
+                            Rumah Sakit Umum Daerah Sayang Rakyat
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.075448, 119.494186</span
+                            >
+                        </td>
+                        <td class="distance">8.115 km</td>
+                        <td class="bearing">5.1°</td>
+                        <td><span class="direction">Utara</span></td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td class="nama-tempat">
+                            Rumah Sakit Umum Stella Maris
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.144373, 119.408894</span
+                            >
+                        </td>
+                        <td class="distance">8.736 km</td>
+                        <td class="bearing">272.7°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td class="nama-tempat">
+                            Rumah Sakit Umum Wisata Universitas Indonesia Timur
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.184947, 119.413642</span
+                            >
+                        </td>
+                        <td class="distance">9.165 km</td>
+                        <td class="bearing">243.5°</td>
+                        <td><span class="direction">Barat Daya</span></td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td class="nama-tempat">
+                            Rumah Sakit Umum Luramay (Yusuf Dg. Ngawing)
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.166513, 119.437462</span
+                            >
+                        </td>
+                        <td class="distance">5.926 km</td>
+                        <td class="bearing">249.8°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td class="nama-tempat">
+                            Rumah Sakit Umum Luramay (Kompleks)
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.166412, 119.437521</span
+                            >
+                        </td>
+                        <td class="distance">5.916 km</td>
+                        <td class="bearing">249.9°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td class="nama-tempat">RS Bhayangkara Makassar</td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.174690, 119.416078</span
+                            >
+                        </td>
+                        <td class="distance">8.462 km</td>
+                        <td class="bearing">249.6°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td class="nama-tempat">RS Primaya Makassar</td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.134806, 119.435120</span
+                            >
+                        </td>
+                        <td class="distance">6.008 km</td>
+                        <td class="bearing">284.3°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td class="nama-tempat">
+                            RS Hermina Makassar (Toddopuli)
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.162782, 119.457624</span
+                            >
+                        </td>
+                        <td class="distance">3.706 km</td>
+                        <td class="bearing">243.9°</td>
+                        <td><span class="direction">Barat Daya</span></td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td class="nama-tempat">RS Sandi Karsa Makassar</td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.149095, 119.438894</span
+                            >
+                        </td>
+                        <td class="distance">5.405 km</td>
+                        <td class="bearing">268.9°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>17</td>
+                        <td class="nama-tempat">
+                            RS Hermina Makassar (Ilma Green)
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.162743, 119.457480</span
+                            >
+                        </td>
+                        <td class="distance">3.719 km</td>
+                        <td class="bearing">244.1°</td>
+                        <td><span class="direction">Barat Daya</span></td>
+                    </tr>
+                    <tr>
+                        <td>18</td>
+                        <td class="nama-tempat">IGD RS Pelamonia Makassar</td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.138727, 119.415386</span
+                            >
+                        </td>
+                        <td class="distance">8.076 km</td>
+                        <td class="bearing">277.4°</td>
+                        <td><span class="direction">Barat</span></td>
+                    </tr>
+                    <tr>
+                        <td>19</td>
+                        <td class="nama-tempat">
+                            Palang Merah Indonesia Gudang Regional Timur
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.148141, 119.487690</span
+                            >
+                        </td>
+                        <td>
+                            <span class="coordinates"
+                                >-5.103370, 119.459890</span
+                            >
+                        </td>
+                        <td class="distance">5.853 km</td>
+                        <td class="bearing">328.3°</td>
+                        <td><span class="direction">Barat Laut</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">19</div>
+                    <div class="stat-label">Total Lokasi</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">3.7 km</div>
+                    <div class="stat-label">Terdekat</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">9.2 km</div>
+                    <div class="stat-label">Terjauh</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">6.8 km</div>
+                    <div class="stat-label">Rata-rata</div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

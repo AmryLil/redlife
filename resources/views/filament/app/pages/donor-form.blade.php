@@ -9,11 +9,11 @@
     </style>
     <div class="min-h-screen w-screen bg-gray-50">
 
-        {{-- Hero Section --}}
+        {{-- Bagian Hero --}}
         <x-waves></x-waves>
-        <h1 class="absolute top-40 font-boldonse left-32 font-bold text-slate-50 text-4xl uppercase">Donations</h1>
+        <h1 class="absolute top-40 font-boldonse left-32 font-bold text-slate-50 text-4xl uppercase">Donasi</h1>
 
-        {{-- Form Section --}}
+        {{-- Bagian Form --}}
         <div class="w-screen md:px-36 ">
             @if ($alreadyRegistered)
                 <div class="flex gap-5 ">
@@ -31,55 +31,55 @@
                                 </div>
                                 <div class="font-semibold text-lg dark:text-white">
                                     <div>{{ $donorData->user->name }}</div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 font-light">Register at 29
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 font-light">Terdaftar pada 29
                                         Maret
                                         2025</div>
                                 </div>
                             </div>
                             <div class="my-8">
-                                <h1 class="font-semibold text-xl">Tracking your status donations</h1>
-                                <p class="font-light text-sm">Lorem ipsum, dolor sit amet consectetur adipisicing elit.
-                                    Asperiores, nemo?</p>
+                                <h1 class="font-semibold text-xl">Lacak Status Donasi Anda</h1>
+                                <p class="font-light text-sm">Pantau perkembangan proses donasi darah Anda dari
+                                    pendaftaran hingga selesai.</p>
                             </div>
                         </div>
                         <ol class="relative border-s border-gray-200 dark:border-gray-700">
                             @php
                                 $statuses = [
                                     1 => [
-                                        'name' => 'Pending',
-                                        'description' => 'Waiting for approval from our team.',
+                                        'name' => 'Menunggu',
+                                        'description' => 'Menunggu persetujuan dari tim kami.',
                                     ],
                                     2 => [
-                                        'name' => 'Approved',
+                                        'name' => 'Disetujui',
                                         'description' =>
-                                            'Your donation has been approved. Please proceed to the blood collection stage.',
+                                            'Donasi Anda telah disetujui. Silakan lanjutkan ke tahap pengambilan darah.',
                                     ],
                                     3 => [
-                                        'name' => 'Rejected',
-                                        'description' => 'Sorry, you do not meet the requirements to donate blood.',
+                                        'name' => 'Ditolak',
+                                        'description' => 'Maaf, Anda tidak memenuhi persyaratan untuk mendonor darah.',
                                     ],
                                     4 => [
-                                        'name' => 'In Progress',
-                                        'description' => 'The blood collection process is currently underway.',
+                                        'name' => 'Sedang Berlangsung',
+                                        'description' => 'Proses pengambilan darah sedang berlangsung.',
                                     ],
                                     5 => [
-                                        'name' => 'Collected',
+                                        'name' => 'Terkumpul',
                                         'description' =>
-                                            'The blood has been successfully collected and is now entering the examination stage.',
+                                            'Darah telah berhasil terkumpul dan sekarang memasuki tahap pemeriksaan.',
                                     ],
                                     6 => [
-                                        'name' => 'Screening & Process',
-                                        'description' => 'The blood is currently undergoing screening and processing.',
+                                        'name' => 'Skrining & Proses',
+                                        'description' => 'Darah sedang dalam proses skrining dan pengolahan.',
                                     ],
                                     7 => [
-                                        'name' => 'Rejected Blood',
+                                        'name' => 'Darah Ditolak',
                                         'description' =>
-                                            'Sorry, your blood did not pass the screening and cannot be used.',
+                                            'Maaf, darah Anda tidak lolos skrining dan tidak dapat digunakan.',
                                     ],
                                     8 => [
-                                        'name' => 'Completed',
+                                        'name' => 'Selesai',
                                         'description' =>
-                                            'All processes are complete, and the blood is ready for use or has been given to a patient.',
+                                            'Semua proses selesai, dan darah siap digunakan atau telah diberikan kepada pasien.',
                                     ],
                                 ];
 
@@ -88,7 +88,7 @@
                             @foreach ($statuses as $id => $status)
                                 @if ($id == 3 || $id == 7)
                                     @if ($donorData->status_id == $id)
-                                        {{-- Tampilkan status 3 (Rejected) atau 7 (Rejected Blood), lalu hentikan perulangan --}}
+                                        {{-- Tampilkan status 3 (Ditolak) atau 7 (Darah Ditolak), lalu hentikan perulangan --}}
                                         <li class="mb-10 ms-6">
                                             <span
                                                 class="absolute flex items-center justify-center w-6 h-6 bg-red-600 
@@ -156,7 +156,7 @@
 
                     <div class="w-1/2 mx-auto p-6 bg-white rounded-xl shadow-md space-y-6">
                         <div class="text-center">
-                            <div class="bg-red-600 rounded-md py-4">
+                            <div class="gradient-custom rounded-md py-4">
                                 <h2 class="text-3xl font-bold text-slate-50 flex items-center justify-center gap-2">
                                     <i class="fas fa-check-circle"></i>
                                     DONOR-{{ str_pad($donorData->id, 6, '0', STR_PAD_LEFT) }}
@@ -165,102 +165,102 @@
                             <p class="mt-2 text-gray-600 text-sm">
                                 @switch($donorData->status_id)
                                     @case(1)
-                                        <span class="text-yellow-500 text-lg">Pending</span> - Waiting for approval.
+                                        <span class="text-yellow-500 text-lg">Menunggu</span> - Menunggu persetujuan.
                                     @break
 
                                     @case(2)
-                                        <span class="text-green-600">Approved</span> - Proceed to the next stage.
+                                        <span class="text-green-600">Disetujui</span> - Lanjutkan ke tahap berikutnya.
                                     @break
 
                                     @case(3)
-                                        <span class="text-red-600">Rejected</span> - Does not meet the requirements.
+                                        <span class="text-red-600">Ditolak</span> - Tidak memenuhi persyaratan.
                                     @break
 
                                     @case(4)
-                                        <span class="text-blue-500">In Progress</span> - Currently in progress.
+                                        <span class="text-blue-500">Sedang Berlangsung</span> - Saat ini sedang berlangsung.
                                     @break
 
                                     @case(5)
-                                        <span class="text-purple-500">Collected</span> - Entering the examination stage.
+                                        <span class="text-purple-500">Terkumpul</span> - Memasuki tahap pemeriksaan.
                                     @break
 
                                     @case(6)
-                                        <span class="text-indigo-500">Screening</span> - Undergoing screening.
+                                        <span class="text-indigo-500">Skrining</span> - Sedang dalam skrining.
                                     @break
 
                                     @case(7)
-                                        <span class="text-red-600">Rejected Blood</span> - Did not pass screening.
+                                        <span class="text-red-600">Darah Ditolak</span> - Tidak lolos skrining.
                                     @break
 
                                     @case(8)
-                                        <span class="text-green-600">Completed</span> - Process completed.
+                                        <span class="text-green-600">Selesai</span> - Proses selesai.
                                     @break
 
                                     @default
-                                        <span class="text-gray-500">Inactive</span>
+                                        <span class="text-gray-500">Tidak Aktif</span>
                                 @endswitch
 
                             </p>
                         </div>
 
                         <div class="space-y-4 text-sm">
-                            {{-- If the status is 1 (Pending), show loading image --}}
+                            {{-- Jika status 1 (Menunggu), tampilkan gambar loading --}}
                             @if ($donorData->status_id == 1)
                                 <div class="flex flex-col items-center">
                                     <img src="{{ asset('images/tl (2).webp') }}" alt="Loading" class="w-80 h-72">
-                                    <p class="text-yellow-500 font-semibold mt-2 text-xl">Waiting for approval...</p>
+                                    <p class="text-yellow-500 font-semibold mt-2 text-xl">Menunggu persetujuan...</p>
                                 </div>
                                 <p class="px-10 font-light text-lg">
-                                    Your data is being verified by our team. Please wait for a moment...
+                                    Data Anda sedang diverifikasi oleh tim kami. Mohon tunggu sebentar...
                                 </p>
                             @endif
 
-                            {{-- If the status is 2 (Approved), display complete information --}}
+                            {{-- Jika status 2 (Disetujui), tampilkan informasi lengkap --}}
                             @if ($donorData->status_id == 2)
                                 <div class="w-full max-w-lg mx-auto p-6 bg-white rounded-xl shadow-md space-y-6">
                                     <div class="text-center">
-                                        <h2 class="text-2xl font-bold text-green-600">Your Data Has Been Verified</h2>
-                                        <p class="mt-2 text-gray-600">Please visit the donation location as per the
-                                            details
-                                            below.</p>
+                                        <h2 class="text-2xl font-bold text-green-600">Data Anda Telah Diverifikasi</h2>
+                                        <p class="mt-2 text-gray-600">Silakan kunjungi lokasi donasi sesuai dengan
+                                            detail
+                                            di bawah ini.</p>
                                     </div>
 
                                     <div class="space-y-4 text-sm">
                                         <div class="flex justify-between border-b pb-2">
-                                            <span class="font-semibold text-gray-700">Name:</span>
+                                            <span class="font-semibold text-gray-700">Nama:</span>
                                             <span class="text-gray-900">{{ $donorData->user->name }}</span>
                                         </div>
 
                                         <div class="flex justify-between border-b pb-2">
-                                            <span class="font-semibold text-gray-700">Location:</span>
+                                            <span class="font-semibold text-gray-700">Lokasi:</span>
                                             <span
                                                 class="text-gray-900">{{ $donorData->location->location_name }}</span>
                                         </div>
 
                                         <div class="flex justify-between border-b pb-2">
-                                            <span class="font-semibold text-gray-700">Address:</span>
+                                            <span class="font-semibold text-gray-700">Alamat:</span>
                                             <span class="text-gray-900">{{ $donorData->location->address }}</span>
                                         </div>
 
                                         <div class="flex justify-between border-b pb-2">
-                                            <span class="font-semibold text-gray-700">Location Details:</span>
+                                            <span class="font-semibold text-gray-700">Detail Lokasi:</span>
                                             <span
                                                 class="text-gray-900">{{ $donorData->location->location_detail }}</span>
                                         </div>
 
                                         <div class="flex justify-between border-b pb-2">
-                                            <span class="font-semibold text-gray-700">Time:</span>
+                                            <span class="font-semibold text-gray-700">Waktu:</span>
                                             <span class="text-gray-900">{{ $donorData->time }}</span>
                                         </div>
 
                                         <div class="flex justify-between border-b pb-2">
-                                            <span class="font-semibold text-gray-700">Registration Date:</span>
+                                            <span class="font-semibold text-gray-700">Tanggal Pendaftaran:</span>
                                             <span
                                                 class="text-gray-900">{{ $donorData->created_at->format('d M Y H:i') }}</span>
                                         </div>
 
                                         <p class="text-red-500 font-semibold mt-1">
-                                            Note: Please show your Donor ID to our team at the location.
+                                            Catatan: Harap tunjukkan ID Donor Anda kepada tim kami di lokasi.
                                         </p>
 
                                         <div class="w-full h-64 mt-4 rounded-lg overflow-hidden shadow-lg">
@@ -274,56 +274,61 @@
                                 </div>
                             @endif
 
-                            {{-- If the status is 3 (Rejected) --}}
+                            {{-- Jika status 3 (Ditolak) --}}
                             @if ($donorData->status_id == 3)
                                 <div class="flex flex-col items-center text-center">
                                     <img src="{{ asset('images/reject.webp') }}" alt="Rejected" class="w-72 h-72">
-                                    <p class="text-red-600 font-semibold mt-4 text-xl">Sorry, You Do Not Meet the
-                                        Requirements</p>
+                                    <p class="text-red-600 font-semibold mt-4 text-xl">Maaf, Anda Tidak Memenuhi
+                                        Persyaratan</p>
                                 </div>
                                 <p class="px-10 font-light text-lg text-gray-700">
-                                    Thank you for registering as a donor. However, after the verification process, we
-                                    regret
-                                    to inform you that
-                                    you do not meet the requirements to donate blood at this time.
+                                    Terima kasih telah mendaftar sebagai pendonor. Namun, setelah proses verifikasi,
+                                    kami
+                                    menyesal
+                                    memberitahukan bahwa
+                                    Anda tidak memenuhi persyaratan untuk mendonor darah pada saat ini.
                                     <br><br>
-                                    If you have any further questions, please contact our team. Stay healthy and keep
-                                    contributing to others!
+                                    Jika Anda memiliki pertanyaan lebih lanjut, silakan hubungi tim kami. Tetap sehat
+                                    dan terus
+                                    berkontribusi untuk orang lain!
                                 </p>
                             @endif
 
-                            {{-- If the status is 4 (In Progress) --}}
+                            {{-- Jika status 4 (Sedang Berlangsung) --}}
                             @if ($donorData->status_id == 4)
                                 <div class="flex flex-col items-center text-center">
                                     <img src="{{ asset('images/process.webp') }}" alt="In Progress"
                                         class="w-72 h-72">
-                                    <p class="text-blue-600 font-semibold mt-4 text-xl">Your Donation is in Progress
+                                    <p class="text-blue-600 font-semibold mt-4 text-xl">Donasi Anda Sedang Berlangsung
                                     </p>
                                 </div>
                                 <p class="px-10 font-light text-lg text-gray-700">
-                                    Your donation process is currently in progress. Please follow the instructions given
-                                    by
-                                    our team at the donation site.
+                                    Proses donasi Anda saat ini sedang berlangsung. Silakan ikuti instruksi yang
+                                    diberikan
+                                    oleh
+                                    tim kami di lokasi donasi.
                                     <br><br>
-                                    If you need further assistance, feel free to reach out to our support team. Thank
-                                    you
-                                    for your contribution!
+                                    Jika Anda memerlukan bantuan lebih lanjut, jangan ragu untuk menghubungi tim
+                                    dukungan kami. Terima
+                                    kasih
+                                    atas kontribusi Anda!
                                 </p>
                             @endif
 
                             @if ($donorData->status_id == 5)
                                 <div class="flex flex-col items-center text-center">
                                     <img src="{{ asset('images/collect.webp') }}" alt="Collected" class="w-72 h-72">
-                                    <p class="text-purple-600 font-semibold mt-4 text-xl">Your Blood Has Been Collected
+                                    <p class="text-purple-600 font-semibold mt-4 text-xl">Darah Anda Telah Terkumpul
                                     </p>
                                 </div>
                                 <p class="px-10 font-light text-lg text-gray-700">
-                                    Your blood donation has been successfully collected and is now undergoing further
-                                    examination.
+                                    Donasi darah Anda telah berhasil terkumpul dan sekarang sedang menjalani pemeriksaan
+                                    lebih lanjut.
                                     <br><br>
-                                    Thank you for your valuable contribution. If you have any questions, please contact
-                                    our
-                                    support team.
+                                    Terima kasih atas kontribusi berharga Anda. Jika Anda memiliki pertanyaan, silakan
+                                    hubungi
+                                    tim
+                                    dukungan kami.
                                 </p>
                             @endif
 
@@ -331,16 +336,18 @@
                                 <div class="flex flex-col items-center text-center">
                                     <img src="{{ asset('images/screnning.webp') }}" alt="Screening"
                                         class="w-72 h-72">
-                                    <p class="text-indigo-600 font-semibold mt-4 text-xl">Screening & Process</p>
+                                    <p class="text-indigo-600 font-semibold mt-4 text-xl">Skrining & Proses</p>
                                 </div>
                                 <p class="px-10 font-light text-lg text-gray-700">
-                                    Your donated blood is currently undergoing a screening process to ensure it meets
-                                    all
-                                    health and safety standards.
+                                    Darah yang Anda donorkan saat ini sedang menjalani proses skrining untuk memastikan
+                                    memenuhi
+                                    semua
+                                    standar kesehatan dan keamanan.
                                     <br><br>
-                                    This is a crucial step before your blood can be used for those in need. Thank you
-                                    for
-                                    your patience and generosity!
+                                    Ini adalah langkah penting sebelum darah Anda dapat digunakan untuk mereka yang
+                                    membutuhkan. Terima
+                                    kasih
+                                    atas kesabaran dan kebaikan hati Anda!
                                 </p>
                             @endif
 
@@ -348,17 +355,19 @@
                                 <div class="flex flex-col items-center text-center">
                                     <img src="{{ asset('images/reject_blood.webp') }}" alt="Rejected Blood"
                                         class="w-72 h-72">
-                                    <p class="text-red-600 font-semibold mt-4 text-xl">Blood Rejected</p>
+                                    <p class="text-red-600 font-semibold mt-4 text-xl">Darah Ditolak</p>
                                 </div>
                                 <p class="px-10 font-light text-lg text-gray-700">
-                                    Unfortunately, after further screening and testing, your donated blood does not meet
-                                    the
-                                    required standards.
+                                    Sayangnya, setelah skrining dan pengujian lebih lanjut, darah yang Anda donorkan
+                                    tidak memenuhi
+                                    standar
+                                    yang diperlukan.
                                     <br><br>
-                                    We appreciate your willingness to donate and encourage you to try again in the
-                                    future.
-                                    If you have any
-                                    questions, please reach out to our team.
+                                    Kami menghargai kemauan Anda untuk mendonor dan mendorong Anda untuk mencoba lagi di
+                                    masa
+                                    depan.
+                                    Jika Anda memiliki
+                                    pertanyaan, silakan hubungi tim kami.
                                 </p>
                             @endif
 
@@ -367,22 +376,21 @@
                                 <div class="flex flex-col items-center text-center">
                                     <img src="{{ asset('images/completed.webp') }}" alt="Completed"
                                         class="w-72 h-72">
-                                    <p class="text-green-600 font-semibold mt-4 text-xl">Donation Completed</p>
+                                    <p class="text-green-600 font-semibold mt-4 text-xl">Donasi Selesai</p>
                                 </div>
                                 <p class="px-10 font-light text-lg text-gray-700">
-                                    Congratulations! Your blood donation has been successfully processed and is now
-                                    ready to
-                                    help those in need.
+                                    Selamat! Donasi darah Anda telah berhasil diproses dan sekarang siap
+                                    membantu mereka yang membutuhkan.
                                     <br><br>
-                                    Thank you for your kindness and contribution. Your donation makes a real difference
-                                    in
-                                    saving lives!
+                                    Terima kasih atas kebaikan dan kontribusi Anda. Donasi Anda membuat perbedaan nyata
+                                    dalam
+                                    menyelamatkan nyawa!
                                 </p>
 
                                 <div x-data="{ showModal: false }" class="w-full max-w-lg mx-auto p-6">
                                     <button @click="showModal = true; document.body.classList.add('overflow-hidden')"
                                         class="px-4 py-2 bg-blue-600 hover:bg-blue-700 transition-all text-white font-semibold rounded-md shadow-md ">
-                                        Show Details
+                                        Tampilkan Detail
                                     </button>
 
                                     <div x-show="showModal" x-transition.opacity
@@ -397,28 +405,30 @@
                                             <div class="space-y-6 text-sm">
                                                 <h2
                                                     class="text-2xl font-extrabold text-gray-800 border-b pb-4 text-center">
-                                                    Donor Details</h2>
+                                                    Detail Pendonor</h2>
                                                 <div class="flex justify-between border-b pb-2">
-                                                    <span class="font-semibold text-gray-600">Name:</span>
+                                                    <span class="font-semibold text-gray-600">Nama:</span>
                                                     <span class="text-gray-900">{{ $donorData->user->name }}</span>
                                                 </div>
                                                 <div class="flex justify-between border-b pb-2">
-                                                    <span class="font-semibold text-gray-600">Blood Type:</span>
+                                                    <span class="font-semibold text-gray-600">Golongan Darah:</span>
                                                     <span
                                                         class="text-gray-900">{{ "{$bloodDetails->bloodType->group}{$bloodDetails->bloodType->rhesus}" }}</span>
                                                 </div>
                                                 <div class="flex justify-between border-b pb-2">
-                                                    <span class="font-semibold text-gray-600">Expiry Date:</span>
+                                                    <span class="font-semibold text-gray-600">Tanggal
+                                                        Kedaluwarsa:</span>
                                                     <span
                                                         class="text-gray-900">{{ $bloodDetails->expiry_date }}</span>
                                                 </div>
                                                 <div class="flex justify-between border-b pb-2">
-                                                    <span class="font-semibold text-gray-600">Blood Component:</span>
+                                                    <span class="font-semibold text-gray-600">Komponen Darah:</span>
                                                     <span
                                                         class="text-gray-900">{{ $bloodDetails->blood_component }}</span>
                                                 </div>
                                                 <div class="flex justify-between border-b pb-2">
-                                                    <span class="font-semibold text-gray-600">Storage Location:</span>
+                                                    <span class="font-semibold text-gray-600">Lokasi
+                                                        Penyimpanan:</span>
                                                     <span
                                                         class="text-gray-900">{{ $bloodDetails->storageLocation->name }}</span>
                                                 </div>
@@ -430,7 +440,7 @@
                                             <button
                                                 @click="showModal = false; document.body.classList.remove('overflow-hidden')"
                                                 class="mt-6 px-5 py-3 bg-red-500 hover:bg-red-600 transition-all text-white font-semibold rounded-xl w-full shadow-lg">
-                                                Close
+                                                Tutup
                                             </button>
                                         </div>
                                     </div>
@@ -456,7 +466,7 @@
                 </div>
                 <div class="flex justify-end gap-4 mt-8 border-t pt-6">
                     <x-filament::button type="submit" wire:click="submit" size="lg" class="!text-lg">
-                        Submit
+                        Kirim
                     </x-filament::button>
                 </div>
             @endif
